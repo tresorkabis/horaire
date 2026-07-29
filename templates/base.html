@@ -1,0 +1,74 @@
+{% load static %}
+<!doctype html>
+<html lang="fr" class="h-full">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Horaires ESFORCA{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],display:['Manrope','sans-serif']},colors:{brand:{50:'#eef6ff',100:'#d9eaff',500:'#1475e8',600:'#075fc7',700:'#074ca0',900:'#092d54'},navy:'#071f3d'},boxShadow:{soft:'0 12px 35px rgba(15,39,71,.07)',card:'0 2px 8px rgba(15,39,71,.04),0 18px 45px rgba(15,39,71,.05)'}}}}}</script>
+  <style>
+    *{scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}.nav-noise{background-image:radial-gradient(circle at 15% 5%,rgba(32,129,236,.35),transparent 26%),linear-gradient(160deg,#0a3768 0%,#071f3d 72%)}
+    body{background:radial-gradient(circle at 78% 5%,rgba(196,181,253,.22),transparent 25%),radial-gradient(circle at 38% 0%,rgba(125,211,252,.22),transparent 28%),linear-gradient(145deg,#eaf2fc 0%,#f1effb 52%,#e7f1fb 100%);background-attachment:fixed}
+    [class~="bg-white"]{background-color:#f6f9ff!important}
+    .official-logo{background:#fff!important}
+    [class*="bg-white/85"]{background:rgba(238,245,255,.9)!important}
+    [class~="bg-slate-50"]{background-color:#edf3fb!important}
+    .field input,.field select,.field textarea,form p input,form p select,form p textarea{width:100%;border:1px solid #b8c8de;border-radius:.8rem;padding:.7rem .9rem;background:#eef5ff;outline:none;transition:.2s}.field input:focus,.field select:focus,.field textarea:focus,form p input:focus,form p select:focus,form p textarea:focus{border-color:#1475e8;box-shadow:0 0 0 4px #d9eaff;background:#f8fbff}form p label{display:block;font-size:.78rem;font-weight:700;color:#263b57;margin-bottom:.35rem}form p{margin-bottom:1rem}.errorlist{font-size:.75rem;color:#dc2626;margin:.3rem 0}
+    section[class*="rounded-3xl"],article[class*="rounded-2xl"]{border-color:#cbd9eb!important}
+    table thead{background:#e4edf8!important}table tbody tr{border-color:#dbe5f1!important}table tbody tr:hover{background:#e9f2ff!important}
+    :is(a,button)[class*="bg-brand-6"],:is(a,button)[class*="bg-blue-6"]{background:#075fc7!important;color:#fff!important;border:1px solid #064b9e!important;box-shadow:0 8px 18px rgba(7,95,199,.28)}
+    :is(a,button)[class*="bg-brand-7"]{background:#074ca0!important;color:#fff!important;border:1px solid #063e83!important}
+    :is(a,button)[class~="bg-brand"]{background:#0871df!important;color:#fff!important;border:1px solid #0756b6!important;box-shadow:0 8px 18px rgba(7,95,199,.28)}
+    :is(a,button)[class~="bg-navy"]{background:#071f3d!important;color:#fff!important;border:1px solid #031326!important;box-shadow:0 8px 18px rgba(7,31,61,.22)}
+    :is(a,button)[class*="bg-blue-50"]{border:1px solid #93c5fd!important;background:#eff6ff!important;color:#0756b6!important}
+    :is(a,button)[class*="bg-emerald-50"]{border:1px solid #6ee7b7!important;background:#ecfdf5!important;color:#047857!important}
+    :is(a,button)[class*="bg-amber-50"]{border:1px solid #fcd34d!important;background:#fffbeb!important;color:#92400e!important}
+    :is(a,button)[class*="bg-red-50"]{border:1px solid #fca5a5!important;background:#fff1f2!important;color:#be123c!important}
+    :is(a,button)[class*="bg-slate-100"]{border:1px solid #cbd5e1!important;color:#334155!important}
+    a[href],button{transition:transform .18s ease,box-shadow .18s ease,background-color .18s ease,border-color .18s ease}
+    :is(a[href],button):hover{filter:saturate(1.12)}
+    :is(a[href],button):focus-visible{outline:3px solid rgba(20,117,232,.35);outline-offset:3px}
+    :is(a,button)[class*="rounded-xl"]:hover,:is(a,button)[class*="rounded-lg"]:hover{transform:translateY(-1px);box-shadow:0 7px 16px rgba(15,39,71,.13)}
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full bg-[#f6f8fc] text-slate-800 font-sans antialiased">
+<div class="min-h-full lg:flex">
+  <div id="overlay" onclick="toggleSidebar()" class="fixed inset-0 z-40 hidden bg-slate-950/50 backdrop-blur-sm lg:hidden"></div>
+  <aside id="sidebar" class="nav-noise fixed inset-y-0 left-0 z-50 flex w-[270px] -translate-x-full flex-col text-white transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0">
+    <div class="flex h-24 items-center gap-3 border-b border-white/10 px-6">
+      <div class="official-logo h-14 w-16 overflow-hidden rounded-xl border-2 border-white/30 shadow-lg"><img src="{% static 'images/logo-esforca.jpeg' %}" alt="Logo officiel de l’Université ESFORCA" class="h-full w-full scale-[1.8] object-contain"></div>
+      <div><div class="font-display text-xl font-extrabold tracking-wide">HORAIRES</div><div class="text-[10px] font-semibold uppercase tracking-[.22em] text-blue-200/75">Université ESFORCA</div></div>
+    </div>
+    <nav class="flex-1 space-y-1.5 overflow-y-auto px-4 py-7 text-sm">
+      <p class="mb-3 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-blue-200/50">Espace académique</p>
+      <a href="{% url 'dashboard' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if request.resolver_match.url_name == 'dashboard' %}bg-blue-500 text-white shadow-lg shadow-blue-950/30{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-grid-2 w-5"></i>Tableau de bord</a>
+      <a href="{% url 'schedule_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if 'schedule' in request.resolver_match.url_name %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-regular fa-calendar-days w-5"></i>Gestion des horaires</a>
+      {% if is_enseignant or 'Enseignant' in user_roles %}<a href="{% url 'submit_availability' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold text-blue-100/75 transition hover:bg-white/10 hover:text-white"><i class="fa-regular fa-clock w-5"></i>Mes disponibilités</a>{% endif %}
+      {% if is_sga or 'SG-A' in user_roles %}<a href="{% url 'manage_personnel' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold {% if 'personnel' in request.resolver_match.url_name %}bg-blue-500 text-white{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-users w-5"></i>Gestion du personnel</a>{% endif %}
+      <div class="my-5 border-t border-white/10"></div>
+      {% if is_sga %}<a href="{% url 'manage_students' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold text-blue-100/75 hover:bg-white/10 hover:text-white"><i class="fa-solid fa-user-graduate w-5"></i>Étudiants</a>{% endif %}
+      {% if is_sga or is_chef %}<a href="{% url 'manage_referentiel' 'cours' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold text-blue-100/75 hover:bg-white/10 hover:text-white"><i class="fa-solid fa-book-open w-5"></i>Cours</a>
+      <a href="{% url 'manage_referentiel' 'promotions' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold text-blue-100/75 hover:bg-white/10 hover:text-white"><i class="fa-solid fa-layer-group w-5"></i>Promotions</a>
+      <a href="{% url 'manage_referentiel' 'filieres' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold text-blue-100/75 hover:bg-white/10 hover:text-white"><i class="fa-solid fa-code-branch w-5"></i>Filières</a>
+      <a href="{% url 'manage_referentiel' 'fonctions' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold text-blue-100/75 hover:bg-white/10 hover:text-white"><i class="fa-solid fa-briefcase w-5"></i>Fonctions</a>{% endif %}
+    </nav>
+    <div class="border-t border-white/10 p-4"><div class="flex items-center gap-3 rounded-2xl bg-white/[.07] p-3"><div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 font-display font-bold">{{ user.nom|slice:':1' }}{{ user.post_nom|slice:':1' }}</div><div class="min-w-0 flex-1"><p class="truncate text-sm font-bold">{{ user.nom }} {{ user.post_nom }}</p><p class="truncate text-[11px] text-blue-200/60">{{ user.email }}</p></div><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button title="Déconnexion" class="text-blue-200/60 hover:text-white"><i class="fa-solid fa-arrow-right-from-bracket"></i></button></form></div></div>
+  </aside>
+  <section class="min-w-0 flex-1">
+    <header class="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200/70 bg-white/85 px-4 backdrop-blur-xl sm:px-8">
+      <div class="flex items-center gap-4"><button onclick="toggleSidebar()" class="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white lg:hidden"><i class="fa-solid fa-bars"></i></button><div><p class="font-display text-lg font-extrabold text-slate-900">{% block page_name %}Espace académique{% endblock %}</p><p class="hidden text-xs text-slate-400 sm:block">Année académique 2025 — 2026</p></div></div>
+      <div class="flex items-center gap-3"><div class="hidden items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 sm:flex"><span class="h-2 w-2 rounded-full bg-emerald-500"></span>Système opérationnel</div><button class="relative grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500"><i class="fa-regular fa-bell"></i><span class="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-red-500"></span></button></div>
+    </header>
+    <main class="mx-auto max-w-[1500px] p-4 sm:p-8 lg:p-10">
+      {% if messages %}<div class="mb-6 space-y-3">{% for message in messages %}<div class="flex items-center gap-3 rounded-2xl border p-4 text-sm font-semibold shadow-soft {% if message.tags == 'success' %}border-emerald-100 bg-emerald-50 text-emerald-800{% else %}border-red-100 bg-red-50 text-red-800{% endif %}"><i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}"></i>{{ message }}</div>{% endfor %}</div>{% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </section>
+</div>
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body></html>

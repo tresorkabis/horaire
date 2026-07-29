@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr" class="h-full">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Connexion · Horaires ESFORCA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans'],display:['Manrope']},colors:{brand:'#0871df',navy:'#061f3d'}}}}</script>
+  <style>.campus{background:radial-gradient(circle at 20% 20%,rgba(34,139,230,.55),transparent 30%),radial-gradient(circle at 80% 80%,rgba(124,58,237,.2),transparent 35%),linear-gradient(145deg,#0b467d,#061f3d 70%)}.login-panel{background:radial-gradient(circle at 90% 5%,rgba(196,181,253,.3),transparent 28%),linear-gradient(145deg,#eaf3ff,#f3efff)}.login-input{background:#edf5ff!important;border-color:#abc0da!important}.login-input:focus{background:#f5f8ff!important}</style>
+</head>
+<body class="h-full bg-slate-50 font-sans text-slate-900">
+<main class="grid min-h-full lg:grid-cols-[1.08fr_.92fr]">
+  <section class="campus relative hidden overflow-hidden p-14 text-white lg:flex lg:flex-col lg:justify-between">
+    <div class="relative z-10 flex items-center gap-4">
+      <span class="h-20 w-24 overflow-hidden rounded-2xl border-2 border-white/40 bg-white shadow-2xl"><img src="/static/images/logo-esforca.jpeg" alt="Logo officiel de l’Université ESFORCA" class="h-full w-full scale-[1.75] object-contain"></span>
+      <div><p class="font-display text-2xl font-extrabold tracking-wide">HORAIRES</p><p class="text-[10px] font-bold uppercase tracking-[.25em] text-blue-200">Université ESFORCA</p></div>
+    </div>
+    <div class="relative z-10 max-w-xl"><span class="mb-6 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-blue-100">PLANIFICATION ACADÉMIQUE INTELLIGENTE</span><h1 class="font-display text-5xl font-extrabold leading-[1.12]">Le temps académique,<br><span class="text-blue-300">parfaitement orchestré.</span></h1><p class="mt-6 max-w-lg text-lg leading-relaxed text-blue-100/75">Une plateforme fiable pour élaborer, confirmer et publier les horaires de l’Université ESFORCA.</p></div>
+    <p class="relative z-10 text-xs text-blue-200/50">© 2026 Université ESFORCA · Excellence académique</p>
+  </section>
+  <section class="login-panel flex items-center justify-center p-6 sm:p-12"><div class="w-full max-w-md">
+    <div class="mb-9 flex items-center gap-3 lg:hidden"><span class="h-16 w-20 overflow-hidden rounded-xl border border-slate-200 bg-white shadow"><img src="/static/images/logo-esforca.jpeg" alt="Logo officiel ESFORCA" class="h-full w-full scale-[1.7] object-contain"></span><div><p class="font-display text-xl font-extrabold text-navy">HORAIRES</p><p class="text-[10px] font-bold tracking-widest text-slate-400">UNIVERSITÉ ESFORCA</p></div></div>
+    <p class="text-xs font-extrabold uppercase tracking-[.18em] text-brand">Portail sécurisé</p><h2 class="mt-3 font-display text-3xl font-extrabold">Heureux de vous revoir</h2><p class="mt-2 text-sm text-slate-500">Connectez-vous avec votre compte institutionnel.</p>
+    {% if messages %}<div class="mt-6">{% for message in messages %}<div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">{{ message }}</div>{% endfor %}</div>{% endif %}
+    <form method="post" class="mt-8 space-y-5">{% csrf_token %}
+      <div><label class="mb-2 block text-xs font-bold text-slate-700">Adresse e-mail</label><input type="email" name="email" required autofocus class="login-input w-full rounded-xl border px-4 py-3.5 outline-none focus:border-brand focus:ring-4 focus:ring-blue-100" placeholder="nom@esforca.edu"></div>
+      <div><label class="mb-2 block text-xs font-bold text-slate-700">Mot de passe</label><input id="password" type="password" name="password" required class="login-input w-full rounded-xl border px-4 py-3.5 outline-none focus:border-brand focus:ring-4 focus:ring-blue-100" placeholder="••••••••"></div>
+      <button class="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-800 bg-brand py-3.5 text-sm font-bold text-white shadow-xl shadow-blue-200 hover:bg-blue-700">Accéder à mon espace <i class="fa-solid fa-arrow-right"></i></button>
+    </form>
+    <div class="mt-8 text-center text-xs text-slate-500"><i class="fa-solid fa-shield-halved mr-2 text-emerald-600"></i>Connexion sécurisée · ESFORCA</div>
+  </div></section>
+</main></body></html>

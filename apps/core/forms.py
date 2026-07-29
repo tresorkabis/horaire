@@ -1,0 +1,204 @@
+from django import forms
+
+from .models import (
+    Chrono_Horaire,
+    Cours,
+    Disponibilite,
+    Etudiant,
+    Filiere,
+    Fonction,
+    Personnel,
+    Promotion,
+    Role,
+    Utilisateur_Role,
+)
+
+# ---------------------------------------------------------------------------
+# Formulaire de base — centralise le style Tailwind commun à tous les champs
+# ---------------------------------------------------------------------------
+
+_BASE_WIDGET_CLASSES = (
+    "w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 "
+    "focus:ring-2 focus:ring-primary-500 outline-none"
+)
+
+
+class BaseForm(forms.ModelForm):
+    """Formulaire de base appliquant un style Tailwind uniforme à tous les champs."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            # Ne pas écraser les widgets qui ont déjà des classes personnalisées
+            existing = field.widget.attrs.get("class", "")
+            if existing:
+                field.widget.attrs["class"] = f"{existing} {_BASE_WIDGET_CLASSES}"
+            else:
+                field.widget.attrs["class"] = _BASE_WIDGET_CLASSES
+
+
+# ---------------------------------------------------------------------------
+# Formulaires
+# ---------------------------------------------------------------------------
+
+class ChronoHoraireForm(BaseForm):
+    """Formulaire de création/édition d'un créneau horaire."""
+
+    class Meta:
+        model = Chrono_Horaire
+        fields = ("jours", "heure", "cours", "personnel", "fonction")
+        widgets = {"heure": forms.TimeInput(attrs={"type": "time"})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["personnel"].queryset = Personnel.objects.filter(
+            roles_associes__role__libelle="Enseignant"
+        ).distinct().order_by("nom", "post_nom")
+
+    def clean(self):
+        cleaned = super().clean()
+        jours = cleaned.get("jours")
+        heure = cleaned.get("heure")
+        personnel = cleaned.get("personnel")
+        if jours and heure and personnel:
+            qs = Chrono_Horaire.objects.filter(
+                jours=jours, heure=heure, personnel=personnel
+            )
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError(
+                    "Ce créneau est déjà occupé par cet enseignant."
+                )
+        return cleaned
+
+
+class PersonnelForm(BaseForm):
+    """Formulaire de création/édition d'un membre du personnel."""
+
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={"class": _BASE_WIDGET_CLASSES}),
+        required=False,
+        label="Mot de passe",
+        help_text="Laisser vide pour conserver l'ancien mot de passe.",
+    )
+    role = forms.ModelChoiceField(
+        queryset=Role.objects.none(),
+        label="Rôle",
+    )
+
+    class Meta:
+        model = Personnel
+        fields = ("nom", "post_nom", "sexe", "email", "matricule", "grade")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["role"].queryset = Role.objects.all().order_by("libelle")
+        if self.instance.pk:
+            association = self.instance.roles_associes.select_related("role").first()
+            if association:
+                self.fields["role"].initial = association.role
+
+    def save(self, commit=True):
+        personnel = super().save(commit=False)
+        password = self.cleaned_data.get("password")
+        if password:
+            personnel.set_password(password)
+        elif not personnel.pk:
+            personnel.set_unusable_password()
+        if commit:
+            personnel.save()
+            Utilisateur_Role.objects.update_or_create(
+                id_util=personnel,
+                role=self.cleaned_data["role"],
+            )
+        return personnel
+
+
+class DisponibiliteForm(forms.ModelForm):
+    """Formulaire de saisie d'une disponibilité enseignant."""
+
+    class Meta:
+        model = Disponibilite
+        fields = ("jour", "heure_debut", "heure_fin", "note")
+        widgets = {
+            "heure_debut": forms.TimeInput(attrs={"type": "time"}),
+            "heure_fin": forms.TimeInput(attrs={"type": "time"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            existing = field.widget.attrs.get("class", "")
+            field.widget.attrs["class"] = (
+                f"{existing} {_BASE_WIDGET_CLASSES}".strip()
+            )
+
+    def clean(self):
+        cleaned = super().clean()
+        debut, fin = cleaned.get("heure_debut"), cleaned.get("heure_fin")
+        if debut and fin and debut >= fin:
+            raise forms.ValidationError(
+                "L'heure de fin doit être postérieure à l'heure de début."
+            )
+        return cleaned
+
+
+class FiliereForm(BaseForm):
+    class Meta:
+        model = Filiere
+        fields = ("nom_filiere",)
+
+
+class PromotionForm(BaseForm):
+    class Meta:
+        model = Promotion
+        fields = ("designation", "annee_academique", "filiere")
+
+
+class CoursForm(BaseForm):
+    class Meta:
+        model = Cours
+        fields = ("titre", "duree")
+
+
+class FonctionForm(BaseForm):
+    class Meta:
+        model = Fonction
+        fields = ("intitule",)
+
+
+class EtudiantForm(BaseForm):
+    """Formulaire d'inscription d'un étudiant."""
+
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={"class": _BASE_WIDGET_CLASSES}),
+        required=False,
+        label="Mot de passe",
+    )
+
+    class Meta:
+        model = Etudiant
+        fields = (
+            "nom",
+            "post_nom",
+            "sexe",
+            "email",
+            "num_matric",
+            "date_naiss",
+            "promotion",
+        )
+        widgets = {"date_naiss": forms.DateInput(attrs={"type": "date"})}
+
+    def save(self, commit=True):
+        etudiant = super().save(commit=False)
+        password = self.cleaned_data.get("password")
+        if password:
+            etudiant.set_password(password)
+        elif not etudiant.pk:
+            etudiant.set_unusable_password()
+        if commit:
+            etudiant.save()
+            role, _ = Role.objects.get_or_create(libelle="Étudiant")
+            Utilisateur_Role.objects.get_or_create(id_util=etudiant, role=role)
+        return etudiant

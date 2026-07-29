@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes disponibilités · Horaires ESFORCA{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-8 flex justify-between items-end">
+        <div>
+            <a href="{% url 'dashboard' %}" class="text-slate-400 hover:text-indigo-600 mb-4 inline-block">
+                <i class="fas fa-arrow-left mr-2"></i> Retour au Dashboard
+            </a>
+            <h1 class="text-3xl font-bold text-slate-900">Soumettre mes Disponibilités</h1>
+            <p class="text-slate-500 mt-1">Indiquez vos créneaux libres pour faciliter la planification.</p>
+        </div>
+        <button onclick="addRow()" class="px-4 py-2 bg-indigo-50 text-indigo-600 font-bold rounded-lg hover:bg-indigo-100 transition-all">
+            <i class="fas fa-plus mr-2"></i> Ajouter un créneau
+        </button>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <form method="POST">
+            {% csrf_token %}
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                        <th class="py-4 px-6">Jour</th>
+                        <th class="py-4 px-6">Heure Début</th>
+                        <th class="py-4 px-6">Heure Fin</th>
+                        <th class="py-4 px-6">Note (Optionnel)</th>
+                        <th class="py-4 px-6"></th>
+                    </tr>
+                </thead>
+                <tbody id="availability-body" class="divide-y divide-slate-100">
+                    <tr>
+                        <td class="py-4 px-6">
+                            <select name="jour[]" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none">
+                                <option>Lundi</option><option>Mardi</option><option>Mercredi</option>
+                                <option>Jeudi</option><option>Vendredi</option><option>Samedi</option>
+                            </select>
+                        </td>
+                        <td class="py-4 px-6">
+                            <input type="time" name="debut[]" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none">
+                        </td>
+                        <td class="py-4 px-6">
+                            <input type="time" name="fin[]" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none">
+                        </td>
+                        <td class="py-4 px-6">
+                            <input type="text" name="note[]" placeholder="Ex: Sauf imprévu" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none">
+                        </td>
+                        <td class="py-4 px-6 text-right text-red-400 cursor-pointer hover:text-red-600">
+                            <i class="fas fa-trash"></i>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end">
+                <button type="submit" class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all">
+                    Enregistrer mes disponibilités
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function addRow() {
+        const body = document.getElementById('availability-body');
+        const newRow = body.rows[0].cloneNode(true);
+        // Clear inputs in cloned row
+        const inputs = newRow.querySelectorAll('input');
+        inputs.forEach(input => input.value = '');
+        body.appendChild(newRow);
+    }
+</script>
+{% endblock %}
