@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Propositions de Créneaux{% endblock %}
+{% block page_name %}Propositions des Enseignants{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900">Centre de Traitement</h1>
+            <p class="text-sm text-slate-500">Intégrez les créneaux proposés dans vos emplois du temps.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ propositions.count }} propositions</span>
+        </div>
+    </div>
+
+    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-500">
+                <tr>
+                    <th class="px-6 py-4">Cours & Fonction</th>
+                    <th class="px-6 py-4">Enseignant</th>
+                    <th class="px-6 py-4">Plage Horaire</th>
+                    <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for prop in propositions %}
+                <tr class="transition hover:bg-slate-50/50">
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-slate-900">{{ prop.cours.titre }}</div>
+                        <div class="text-xs text-slate-500">{{ prop.fonction.intitule }}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            <div class="h-6 w-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-[10px] font-bold">
+                                {{ prop.personnel.nom|slice:':1' }}
+                            </div>
+                            <span class="font-medium text-slate-700">{{ prop.personnel.nom }} {{ prop.personnel.post_nom }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            <span class="rounded-md bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700">{{ prop.jours }}</span>
+                            <span class="font-medium text-slate-600">{{ prop.heure }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex justify-end gap-2">
+                            <button title="Ajouter à un horaire" class="rounded-lg p-2 text-brand-600 transition hover:bg-blue-50">
+                                <i class="fa-solid fa-plus-circle"></i>
+                            </button>
+                            <button title="Détails" class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100">
+                                <i class="fa-solid fa-circle-info"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-6 py-12 text-center">
+                        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                            <i class="fa-solid fa-box-open text-xl"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-900">Aucune proposition en attente</h3>
+                        <p class="text-sm text-slate-500">Tous les créneaux ont été traités ou aucun n'a été proposé.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

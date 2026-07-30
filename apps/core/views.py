@@ -10,8 +10,8 @@ from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import (
-    ChronoHoraireForm,
     CoursForm,
+    CreneauHoraireForm,
     DisponibiliteForm,
     EtudiantForm,
     FiliereForm,
@@ -20,8 +20,8 @@ from .forms import (
     PromotionForm,
 )
 from .models import (
-    Chrono_Horaire,
     Cours,
+    Creneau_Horaire,
     Disponibilite,
     Etudiant,
     Filiere,
@@ -32,6 +32,10 @@ from .models import (
     ROLE_ENSEIGNANT,
     ROLE_ETUDIANT,
     ROLE_SGA,
+    STATUS_DRAFT,
+    STATUS_PROPOSED,
+    STATUS_CONFIRMED,
+    STATUS_PUBLISHED,
     STATUS_CHOICES,
 )
 
@@ -101,35 +105,54 @@ def dashboard(request):
     """Tableau de bord personnalisé selon le rôle de l'utilisateur."""
     user = request.user
     roles = _roles(user)
-    context = {"user_roles": roles, "horaires": Chrono_Horaire.objects.none()}
+    context = {"user_roles": roles, "horaires": Creneau_Horaire.objects.none()}
 
-    # Requête de base optimisée avec select_related
-    related = Chrono_Horaire.objects.select_related("cours", "personnel", "fonction")
+    # Requête de base optimisée
+    related_creneaux = Creneau_Horaire.objects.select_related("cours", "personnel", "fonction", "horaire")
 
     if user.is_sga:
-        context.update(is_sga=True, horaires=related, personnels=Personnel.objects.all())
+        context.update(is_sga=True, horaires=related_creneaux, personnels=Personnel.objects.all())
     elif user.is_chef:
-        context.update(is_chef=True, horaires=related)
+        # Le Chef de Filière voit :
+        # 1. Les propositions de créneaux non encore intégrées à un horaire
+        propositions_en_attente = related_creneaux.filter(
+            status=STATUS_PROPOSED, 
+            horaire__isnull=True
+        )
+        # 2. Les créneaux des horaires qu'il a lui-même créés ou gérés (via ses promotions)
+        # Note: On pourrait filtrer ici par la filière du chef si le modèle le permettait
+        horaires_integres = related_creneaux.filter(horaire__isnull=False)
+        
+        context.update(
+            is_chef=True, 
+            horaires=horaires_integres, 
+            propositions_en_attente=propositions_en_attente,
+            total_propositions=propositions_en_attente.count()
+        )
     elif user.is_enseignant and hasattr(request.user, "personnel"):
         context.update(
             is_enseignant=True,
-            horaires=related.filter(personnel=request.user.personnel),
+            horaires=related_creneaux.filter(personnel=request.user.personnel),
         )
     elif user.is_etudiant and hasattr(request.user, "etudiant"):
-        # Filtrer les horaires publiés par la promotion de l'étudiant
+        # Filtrer les créneaux dont l'horaire global est PUBLISHED et lié à sa promotion
         etudiant = request.user.etudiant
         if etudiant.promotion:
-            horaires = related.filter(status="PUBLISHED", promotions=etudiant.promotion)
+            horaires = related_creneaux.filter(
+                horaire__status=STATUS_PUBLISHED, 
+                horaire__promotion=etudiant.promotion
+            )
         else:
-            horaires = related.filter(status="PUBLISHED")
+            horaires = related_creneaux.filter(horaire__status=STATUS_PUBLISHED)
         context.update(is_etudiant=True, horaires=horaires)
 
-    # Compter les statuts en une seule requête groupée
-    horaires = context["horaires"]
-    context["published_count"] = horaires.filter(status="PUBLISHED").count()
-    context["pending_count"] = horaires.filter(
-        status__in=("PROPOSED", "CONFIRMED")
-    ).count()
+    # Statistiques globales pour le dashboard
+    horaires_final = context["horaires"]
+    context["published_count"] = horaires_final.filter(horaire__status=STATUS_PUBLISHED).count() if not user.is_enseignant else 0
+    context["pending_count"] = horaires_final.filter(
+        horaire__status__in=("PROPOSED", "CONFIRMED")
+    ).count() if not user.is_enseignant else 0
+    
     return render(request, "core/dashboard.html", context)
 
 
@@ -144,7 +167,7 @@ def schedule_list(request):
     roles = _roles(user)
     context = {"user_roles": roles}
 
-    horaires = Chrono_Horaire.objects.select_related("cours", "personnel", "fonction")
+    horaires = Creneau_Horaire.objects.select_related("cours", "personnel", "fonction")
 
     if user.is_sga:
         context["is_sga"] = True
@@ -199,48 +222,84 @@ def schedule_list(request):
 
 @role_required(ROLE_CHEF)
 def edit_schedule(request, pk=None):
-    """Création ou édition d'un horaire (Chef de Filière)."""
-    horaire = get_object_or_404(Chrono_Horaire, pk=pk) if pk else None
-    if horaire and horaire.status not in ("DRAFT", "PROPOSED"):
-        messages.error(request, "Un horaire confirmé ou publié ne peut plus être modifié.")
+    """Création ou édition d'un créneau horaire (Chef de Filière)."""
+    creneau = get_object_or_404(Creneau_Horaire, pk=pk) if pk else None
+    
+    if creneau and creneau.status not in (STATUS_DRAFT, STATUS_PROPOSED):
+        messages.error(request, "Un créneau confirmé ou publié ne peut plus être modifié.")
         return redirect("dashboard")
-    form = ChronoHoraireForm(request.POST or None, instance=horaire)
+
+    form = CreneauHoraireForm(request.POST or None, instance=creneau)
+    
     if request.method == "POST" and form.is_valid():
         instance = form.save(commit=False)
+        
+        # Gestion du statut : forcer DRAFT ou PROPOSED pour les créations/modifs du Chef
         status = request.POST.get("status")
-        instance.status = status if status in ("DRAFT", "PROPOSED") else "DRAFT"
+        instance.status = status if status in (STATUS_DRAFT, STATUS_PROPOSED) else STATUS_DRAFT
+        
+        # Si le Chef veut l'affecter à un horaire global, on récupère l'ID depuis le POST
+        horaire_id = request.POST.get("horaire")
+        if horaire_id:
+            from .models import Horaire
+            instance.horaire = Horaire.objects.get(pk=horaire_id)
+        
         instance.save()
-        messages.success(request, "Horaire enregistré.")
+        messages.success(request, "Créneau enregistré avec succès.")
         return redirect("dashboard")
-    return render(request, "core/edit_schedule.html", {"horaire": horaire, "form": form})
+
+    # Pour le formulaire, on peut ajouter la liste des Horaires disponibles pour l'affectation
+    from .models import Horaire
+    horaires_dispos = Horaire.objects.all()
+    
+    return render(request, "core/edit_schedule.html", {
+        "creneau": creneau, 
+        "form": form, 
+        "horaires": horaires_dispos
+    })
 
 
 @role_required(ROLE_CHEF)
 def publish_schedule(request, pk):
-    """Publication d'un horaire confirmé (Chef de Filière)."""
+    """
+    Publication d'un horaire global.
+    Désormais, on publie l'objet Horaire, pas le créneau individuel.
+    """
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
-    horaire = get_object_or_404(Chrono_Horaire, pk=pk)
-    if horaire.status != "CONFIRMED":
-        messages.error(request, "Seul un horaire confirmé par le SGA peut être publié.")
+    
+    from .models import Horaire
+    horaire = get_object_or_404(Horaire, pk=pk)
+    
+    if horaire.status != STATUS_CONFIRMED:
+        messages.error(request, "Seul un emploi du temps confirmé par le SGA peut être publié.")
     else:
-        horaire.transitionner("PUBLISHED")
-        messages.success(request, "Horaire publié officiellement.")
-    return redirect("dashboard")
+        horaire.status = STATUS_PUBLISHED
+        horaire.save()
+        messages.success(request, "L'emploi du temps a été publié officiellement.")
+    
+    return redirect("horaire_list")
 
 
 @role_required(ROLE_SGA)
 def confirm_schedule(request, pk):
-    """Confirmation d'un horaire proposé (SG-A)."""
+    """
+    Confirmation d'un horaire global (SG-A).
+    """
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
-    horaire = get_object_or_404(Chrono_Horaire, pk=pk)
-    if horaire.status != "PROPOSED":
-        messages.error(request, "Seul un horaire proposé peut être confirmé.")
+    
+    from .models import Horaire
+    horaire = get_object_or_404(Horaire, pk=pk)
+    
+    if horaire.status != STATUS_PROPOSED:
+        messages.error(request, "Seul un emploi du temps proposé peut être confirmé.")
     else:
-        horaire.transitionner("CONFIRMED")
-        messages.success(request, "Charge horaire confirmée par le SGA.")
-    return redirect("dashboard")
+        horaire.status = STATUS_CONFIRMED
+        horaire.save()
+        messages.success(request, "L'emploi du temps a été confirmé par le SGA.")
+        
+    return redirect("horaire_list")
 
 
 # ---------------------------------------------------------------------------
@@ -291,7 +350,7 @@ def annotate_schedule(request, pk):
     if not hasattr(request.user, "personnel"):
         messages.error(request, "Aucun profil personnel associé.")
         return redirect("dashboard")
-    horaire = get_object_or_404(Chrono_Horaire, pk=pk, personnel=request.user.personnel)
+    horaire = get_object_or_404(Creneau_Horaire, pk=pk, personnel=request.user.personnel)
     horaire.annotations = request.POST.get("annotations", "").strip()
     horaire.save(update_fields=["annotations"])
     messages.success(request, "Annotation enregistrée.")
@@ -460,3 +519,40 @@ def delete_student(request, pk):
     get_object_or_404(Etudiant, pk=pk).delete()
     messages.success(request, "Étudiant supprimé.")
     return redirect("manage_students")
+
+
+# ---------------------------------------------------------------------------
+# Gestion globale des emplois du temps
+# ---------------------------------------------------------------------------
+
+@role_required(ROLE_CHEF, ROLE_SGA)
+def horaire_list(request):
+    """Liste des emplois du temps globaux (objets Horaire)."""
+    user = request.user
+    horaires = Horaire.objects.select_related("promotion", "filiere__nom_filiere").all()
+    
+    if user.is_chef:
+        # Le chef ne voit que les horaires de sa filière (si définie)
+        # Pour l'instant, on affiche tout ou on filtre par filière si on ajoute ce champ au profil
+        pass
+
+    context = {
+        "horaires": horaires,
+        "user_roles": _roles(user),
+    }
+    return render(request, "core/horaire_list.html", context)
+
+
+@role_required(ROLE_CHEF)
+def propositions_list(request):
+    """Liste des créneaux proposés par les enseignants non encore affectés."""
+    propositions = Creneau_Horaire.objects.filter(
+        status=STATUS_PROPOSED, 
+        horaire__isnull=True
+    ).select_related("cours", "personnel", "fonction")
+    
+    context = {
+        "propositions": propositions,
+        "user_roles": _roles(request.user),
+    }
+    return render(request, "core/propositions_list.html", context)

@@ -7,7 +7,7 @@ django.setup()
 
 from apps.core.models import (
     Utilisateur, Personnel, Etudiant, Role, Filiere, 
-    Promotion, Cours, Fonction, Chrono_Horaire, Utilisateur_Role
+    Promotion, Cours, Fonction, Creneau_Horaire, Utilisateur_Role
 )
 
 def seed():
@@ -63,35 +63,35 @@ def seed():
 
     # 5. Horaires (Différents états)
     # Brouillon (Chef) - Génie Logiciel L1
-    horaire1 = Chrono_Horaire.objects.get_or_create(heure=datetime.time(8,0), jours="Lundi", cours=c1, personnel=chef, defaults={'fonction': f_th, 'status': 'DRAFT'})[0]
+    horaire1 = Creneau_Horaire.objects.get_or_create(heure=datetime.time(8,0), jours="Lundi", cours=c1, personnel=chef, defaults={'fonction': f_th, 'status': 'DRAFT'})[0]
     horaire1.promotions.set([l1_gl])
 
     # Proposé (En attente SGA) - Génie Logiciel L1
-    horaire2 = Chrono_Horaire.objects.get_or_create(heure=datetime.time(10,0), jours="Mardi", cours=c2, personnel=prof, defaults={'fonction': f_tp, 'status': 'PROPOSED'})[0]
+    horaire2 = Creneau_Horaire.objects.get_or_create(heure=datetime.time(10,0), jours="Mardi", cours=c2, personnel=prof, defaults={'fonction': f_tp, 'status': 'PROPOSED'})[0]
     horaire2.promotions.set([l1_gl])
 
     # Confirmé (Par SGA, en attente publication Chef) - Génie Logiciel L2
-    horaire3 = Chrono_Horaire.objects.get_or_create(heure=datetime.time(14,0), jours="Jeudi", cours=c3, personnel=prof, defaults={'fonction': f_th, 'status': 'CONFIRMED'})[0]
+    horaire3 = Creneau_Horaire.objects.get_or_create(heure=datetime.time(14,0), jours="Jeudi", cours=c3, personnel=prof, defaults={'fonction': f_th, 'status': 'CONFIRMED'})[0]
     horaire3.promotions.set([l2_gl])
 
     # Publié (Visible par tous) - Génie Logiciel L1
-    horaire4 = Chrono_Horaire.objects.get_or_create(heure=datetime.time(8,0), jours="Vendredi", cours=c1, personnel=chef, defaults={'fonction': f_tp, 'status': 'PUBLISHED'})[0]
+    horaire4 = Creneau_Horaire.objects.get_or_create(heure=datetime.time(8,0), jours="Vendredi", cours=c1, personnel=chef, defaults={'fonction': f_tp, 'status': 'PUBLISHED'})[0]
     horaire4.promotions.set([l1_gl])
 
     # Ajout d'horaires pour d'autres filières
     # Sciences Commerciales L1 - Publié
     c4, _ = Cours.objects.get_or_create(titre="Marketing Digital", defaults={'duree': 90})
-    horaire5 = Chrono_Horaire.objects.get_or_create(heure=datetime.time(10,0), jours="Lundi", cours=c4, personnel=prof, defaults={'fonction': f_th, 'status': 'PUBLISHED'})[0]
+    horaire5 = Creneau_Horaire.objects.get_or_create(heure=datetime.time(10,0), jours="Lundi", cours=c4, personnel=prof, defaults={'fonction': f_th, 'status': 'PUBLISHED'})[0]
     horaire5.promotions.set([l1_sc])
 
     # Réseaux et Techniques de Maintenance L1 - Publié
     c5, _ = Cours.objects.get_or_create(titre="Administration Réseau", defaults={'duree': 120})
-    horaire6 = Chrono_Horaire.objects.get_or_create(heure=datetime.time(14,0), jours="Mardi", cours=c5, personnel=chef, defaults={'fonction': f_tp, 'status': 'PUBLISHED'})[0]
+    horaire6 = Creneau_Horaire.objects.get_or_create(heure=datetime.time(14,0), jours="Mardi", cours=c5, personnel=chef, defaults={'fonction': f_tp, 'status': 'PUBLISHED'})[0]
     horaire6.promotions.set([l1_rt])
 
     # Secrétariat de Direction L1 - Publié
     c6, _ = Cours.objects.get_or_create(titre="Communication Professionnelle", defaults={'duree': 90})
-    horaire7 = Chrono_Horaire.objects.get_or_create(heure=datetime.time(9,0), jours="Mercredi", cours=c6, personnel=prof, defaults={'fonction': f_th, 'status': 'PUBLISHED'})[0]
+    horaire7 = Creneau_Horaire.objects.get_or_create(heure=datetime.time(9,0), jours="Mercredi", cours=c6, personnel=prof, defaults={'fonction': f_th, 'status': 'PUBLISHED'})[0]
     horaire7.promotions.set([l1_sd])
 
     print("Base de données prête !")

@@ -1,8 +1,8 @@
 from django import forms
 
 from .models import (
-    Chrono_Horaire,
     Cours,
+    Creneau_Horaire,
     Disponibilite,
     Etudiant,
     Filiere,
@@ -41,12 +41,12 @@ class BaseForm(forms.ModelForm):
 # Formulaires
 # ---------------------------------------------------------------------------
 
-class ChronoHoraireForm(BaseForm):
+class CreneauHoraireForm(BaseForm):
     """Formulaire de création/édition d'un créneau horaire."""
 
     class Meta:
-        model = Chrono_Horaire
-        fields = ("jours", "heure", "cours", "personnel", "fonction")
+        model = Creneau_Horaire
+        fields = ("jours", "heure", "cours", "personnel", "fonction", "horaire")
         widgets = {"heure": forms.TimeInput(attrs={"type": "time"})}
 
     def __init__(self, *args, **kwargs):
@@ -54,6 +54,8 @@ class ChronoHoraireForm(BaseForm):
         self.fields["personnel"].queryset = Personnel.objects.filter(
             roles_associes__role__libelle="Enseignant"
         ).distinct().order_by("nom", "post_nom")
+        # On rend le champ horaire optionnel pour permettre les propositions isolées
+        self.fields["horaire"].required = False
 
     def clean(self):
         cleaned = super().clean()
@@ -61,7 +63,7 @@ class ChronoHoraireForm(BaseForm):
         heure = cleaned.get("heure")
         personnel = cleaned.get("personnel")
         if jours and heure and personnel:
-            qs = Chrono_Horaire.objects.filter(
+            qs = Creneau_Horaire.objects.filter(
                 jours=jours, heure=heure, personnel=personnel
             )
             if self.instance and self.instance.pk:

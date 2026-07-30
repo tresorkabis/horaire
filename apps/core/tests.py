@@ -3,7 +3,7 @@ from datetime import date, time
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import (Chrono_Horaire, Cours, Etudiant, Filiere, Fonction,
+from .models import (Creneau_Horaire, Cours, Etudiant, Filiere, Fonction,
                      Personnel, Promotion, Role, Utilisateur_Role)
 
 
@@ -26,7 +26,7 @@ class WorkflowTests(TestCase):
             Utilisateur_Role.objects.create(id_util=user, role=role)
         cours = Cours.objects.create(titre="Django", duree=120)
         fonction = Fonction.objects.create(intitule="Cours théorique")
-        self.horaire = Chrono_Horaire.objects.create(heure=time(8), jours="Lundi", cours=cours, personnel=self.teacher, fonction=fonction, status="PROPOSED")
+        self.horaire = Creneau_Horaire.objects.create(heure=time(8), jours="Lundi", cours=cours, personnel=self.teacher, fonction=fonction, status="PROPOSED")
 
     def test_sga_confirme_puis_chef_publie(self):
         self.client.force_login(self.sga)
@@ -102,7 +102,7 @@ class WorkflowTests(TestCase):
             "status": "DRAFT",
         })
         self.assertRedirects(response, reverse("dashboard"))
-        self.assertTrue(Chrono_Horaire.objects.filter(jours="Mercredi", heure="13:00").exists())
+        self.assertTrue(Creneau_Horaire.objects.filter(jours="Mercredi", heure="13:00").exists())
 
 
 class StudentVisibilityTests(TestCase):

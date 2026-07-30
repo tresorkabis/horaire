@@ -8,7 +8,7 @@ from django.urls import reverse
 # Constantes partagées
 # ---------------------------------------------------------------------------
 
-#: Libellés des jours de la semaine utilisés par Chrono_Horaire et Disponibilite.
+#: Libellés des jours de la semaine utilisés par Creneau_Horaire et Disponibilite.
 JOURS_CHOICES = [
     ("Lundi", "Lundi"),
     ("Mardi", "Mardi"),
@@ -285,58 +285,84 @@ class Fonction(models.Model):
         return self.intitule
 
 
-# ---------------------------------------------------------------------------
-# Planification
-# ---------------------------------------------------------------------------
-
-class Chrono_Horaire(models.Model):
+class Horaire(models.Model):
     """
-    Créneau horaire liant un cours, un personnel et une fonction.
-
-    Le champ ``status`` suit un workflow immuable :
-    DRAFT → PROPOSED → CONFIRMED → PUBLISHED
+    Conteneur global d'emploi du temps pour une promotion donnée.
+    Regroupe plusieurs créneaux horaires pour une validation globale.
     """
-
-    id_chrono = models.AutoField(primary_key=True)
-    heure = models.TimeField()
-    jours = models.CharField(max_length=20, choices=JOURS_CHOICES)
-    cours = models.ForeignKey(
-        Cours, on_delete=models.CASCADE, related_name="horaires"
+    id_horaire = models.AutoField(primary_key=True)
+    promotion = models.ForeignKey(
+        Promotion, on_delete=models.CASCADE, related_name="horaires"
     )
-    personnel = models.ForeignKey(
-        Personnel, on_delete=models.CASCADE, related_name="dispense_cours"
-    )
-    fonction = models.ForeignKey(
-        Fonction, on_delete=models.SET_NULL, null=True, related_name="occupations"
-    )
-    promotions = models.ManyToManyField(
-        Promotion,
-        related_name="horaires",
-        blank=True,
-        help_text="Promotions concernées par cet horaire"
-    )
+    titre = models.CharField(max_length=200, help_text="ex: Semestre 1 - 2026")
     status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default=STATUS_DRAFT
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default=STATUS_DRAFT
     )
-    annotations = models.TextField(
-        blank=True,
-        null=True,
-        help_text="Annotations ou demandes de modification de l'enseignant",
-    )
+    date_creation = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "Horaire"
         verbose_name_plural = "Horaires"
+        ordering = ["-date_creation"]
+
+    def __str__(self):
+        return f"{self.titre} - {self.promotion}"
+
+
+# ---------------------------------------------------------------------------
+# Planification
+# ---------------------------------------------------------------------------
+
+class Creneau_Horaire(models.Model):
+    """
+    Créneau horaire liant un cours, un personnel et une fonction.
+    Peut être une proposition isolée d'un enseignant ou faire partie d'un Horaire.
+    """
+
+    id_chrono = models.AutoField(primary_key=True)
+    heure = models.TimeField()
+    jours = models.CharField(
+        max_length=20, 
+        choices=JOURS_CHOICES
+    )
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default=STATUS_DRAFT
+    )
+    cours = models.ForeignKey(
+        Cours, on_delete=models.CASCADE, related_name="horaires"
+    )
+    fonction = models.ForeignKey(
+        Fonction, on_delete=models.SET_NULL, null=True, related_name="occupations"
+    )
+    personnel = models.ForeignKey(
+        Personnel, on_delete=models.CASCADE, related_name="dispense_cours"
+    )
+    horaire = models.ForeignKey(
+        Horaire, on_delete=models.SET_NULL, null=True, blank=True, related_name="creneaux"
+    )
+    annotations = models.TextField(
+        blank=True, 
+        null=True, 
+        help_text="Annotations ou demandes de modification de l'enseignant"
+    )
+
+    class Meta:
+        verbose_name = "Créneau Horaire"
+        verbose_name_plural = "Créneaux Horaires"
         ordering = ["jours", "heure"]
         constraints = [
             models.UniqueConstraint(
-                fields=("jours", "heure", "personnel"),
-                name="unique_creneau_personnel",
+                fields=("jours", "heure", "personnel"), 
+                name="unique_creneau_personnel"
             )
         ]
 
     def __str__(self):
-        return f"{self.jours} {self.heure} - {self.cours.titre}"
+        return f"{self.cours} | {self.jours} {self.heure}"
 
     # -- Workflow ---------------------------------------------------------
 

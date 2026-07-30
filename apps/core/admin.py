@@ -1,8 +1,8 @@
 from django.contrib import admin
 
 from .models import (
-    Chrono_Horaire,
     Cours,
+    Creneau_Horaire,
     Disponibilite,
     Etudiant,
     Filiere,
@@ -101,8 +101,8 @@ class FonctionAdmin(admin.ModelAdmin):
 # Planification
 # ---------------------------------------------------------------------------
 
-@admin.register(Chrono_Horaire)
-class ChronoHoraireAdmin(admin.ModelAdmin):
+@admin.register(Creneau_Horaire)
+class CreneauHoraireAdmin(admin.ModelAdmin):
     list_display = ("id_chrono", "jours", "heure", "cours", "personnel", "fonction", "status")
     list_filter = ("jours", "status", "fonction", "cours")
     search_fields = ("cours__titre", "personnel__nom", "personnel__post_nom")
