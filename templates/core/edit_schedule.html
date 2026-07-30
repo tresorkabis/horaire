@@ -16,10 +16,28 @@
         <form method="POST" class="space-y-6">
             {% csrf_token %}
             {% if form.non_field_errors %}<div class="p-4 rounded-xl bg-red-50 text-red-700">{{ form.non_field_errors }}</div>{% endif %}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Type de créneau</label>
+                {{ form.type_horaire }} {{ form.type_horaire.errors }}
+                <p class="mt-1 text-xs text-slate-400">Cours = jour hebdomadaire · Examen = date précise</p>
+            </div>
+
+            <div id="cours-fields" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Jour</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Jour de la semaine</label>
                     {{ form.jours }} {{ form.jours.errors }}
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Heure de début</label>
+                    {{ form.heure }} {{ form.heure.errors }}
+                </div>
+            </div>
+
+            <div id="examen-fields" class="grid grid-cols-1 md:grid-cols-2 gap-6" style="display:none;">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Date de l'examen</label>
+                    {{ form.date }} {{ form.date.errors }}
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-2">Heure de début</label>
@@ -52,5 +70,26 @@
             </div>
         </form>
     </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.querySelector('[name="type_horaire"]');
+    const coursFields = document.getElementById('cours-fields');
+    const examenFields = document.getElementById('examen-fields');
+
+    function toggleFields() {
+        if (typeSelect.value === 'EXAMEN') {
+            coursFields.style.display = 'none';
+            examenFields.style.display = 'grid';
+        } else {
+            coursFields.style.display = 'grid';
+            examenFields.style.display = 'none';
+        }
+    }
+
+    typeSelect.addEventListener('change', toggleFields);
+    toggleFields();
+});
+</script>
 </div>
 {% endblock %}

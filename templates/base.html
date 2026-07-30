@@ -46,11 +46,12 @@
     <nav class="flex-1 space-y-1.5 overflow-y-auto px-4 py-7 text-sm">
       <p class="mb-3 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-blue-200/50">Espace académique</p>
       <a href="{% url 'dashboard' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if request.resolver_match.url_name == 'dashboard' %}bg-blue-500 text-white shadow-lg shadow-blue-950/30{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-grid-2 w-5"></i>Tableau de bord</a>
-      <a href="{% url 'schedule_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if 'schedule' in request.resolver_match.url_name %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-regular fa-calendar-days w-5"></i>Gestion des horaires</a>
+      <a href="{% url 'schedule_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if 'schedule' in request.resolver_match.url_name %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-regular fa-calendar-days w-5"></i>Créneaux</a>
       
       {% if is_chef or 'Chef de Filière' in user_roles %}
       <div class="my-4 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-blue-200/50">Coordination</div>
-      <a href="{% url 'horaire_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if request.resolver_match.url_name == 'horaire_list' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-layer-group w-5"></i>Emplois du temps</a>
+      <a href="{% url 'horaire_list' %}?type=COURS" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if request.resolver_match.url_name == 'horaire_list' and request.GET.type != 'EXAMEN' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-book-open w-5"></i>Cours</a>
+      <a href="{% url 'horaire_list' %}?type=EXAMEN" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if request.resolver_match.url_name == 'horaire_list' and request.GET.type == 'EXAMEN' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-pen-to-square w-5"></i>Examens</a>
       <a href="{% url 'propositions_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if request.resolver_match.url_name == 'propositions_list' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-hand-holding-medical w-5"></i>Propositions</a>
       {% endif %}
 

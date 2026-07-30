@@ -11,6 +11,8 @@ from .models import (
     Promotion,
     Role,
     Utilisateur_Role,
+    TYPE_COURS,
+    TYPE_EXAMEN,
 )
 
 # ---------------------------------------------------------------------------
@@ -46,8 +48,11 @@ class CreneauHoraireForm(BaseForm):
 
     class Meta:
         model = Creneau_Horaire
-        fields = ("jours", "heure", "cours", "personnel", "fonction", "horaire")
-        widgets = {"heure": forms.TimeInput(attrs={"type": "time"})}
+        fields = ("type_horaire", "jours", "date", "heure", "cours", "personnel", "fonction", "horaire")
+        widgets = {
+            "heure": forms.TimeInput(attrs={"type": "time"}),
+            "date": forms.DateInput(attrs={"type": "date"}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -56,22 +61,46 @@ class CreneauHoraireForm(BaseForm):
         ).distinct().order_by("nom", "post_nom")
         # On rend le champ horaire optionnel pour permettre les propositions isolées
         self.fields["horaire"].required = False
+        # Rendre jours et date conditionnels selon le type
+        self.fields["jours"].required = False
+        self.fields["date"].required = False
 
     def clean(self):
         cleaned = super().clean()
+        type_horaire = cleaned.get("type_horaire")
         jours = cleaned.get("jours")
+        date = cleaned.get("date")
         heure = cleaned.get("heure")
         personnel = cleaned.get("personnel")
-        if jours and heure and personnel:
-            qs = Creneau_Horaire.objects.filter(
-                jours=jours, heure=heure, personnel=personnel
-            )
-            if self.instance and self.instance.pk:
-                qs = qs.exclude(pk=self.instance.pk)
-            if qs.exists():
-                raise forms.ValidationError(
-                    "Ce créneau est déjà occupé par cet enseignant."
+
+        # Validation selon le type
+        if type_horaire == TYPE_COURS and not jours:
+            raise forms.ValidationError("Un cours hebdomadaire doit avoir un jour de la semaine.")
+        if type_horaire == TYPE_EXAMEN and not date:
+            raise forms.ValidationError("Un examen doit avoir une date précise.")
+
+        # Vérification des conflits
+        if heure and personnel:
+            if type_horaire == TYPE_EXAMEN and date:
+                qs = Creneau_Horaire.objects.filter(
+                    date=date, heure=heure, personnel=personnel
                 )
+                if self.instance and self.instance.pk:
+                    qs = qs.exclude(pk=self.instance.pk)
+                if qs.exists():
+                    raise forms.ValidationError(
+                        "Ce créneau est déjà occupé par cet enseignant à cette date."
+                    )
+            elif type_horaire == TYPE_COURS and jours:
+                qs = Creneau_Horaire.objects.filter(
+                    jours=jours, heure=heure, personnel=personnel
+                )
+                if self.instance and self.instance.pk:
+                    qs = qs.exclude(pk=self.instance.pk)
+                if qs.exists():
+                    raise forms.ValidationError(
+                        "Ce créneau est déjà occupé par cet enseignant."
+                    )
         return cleaned
 
 

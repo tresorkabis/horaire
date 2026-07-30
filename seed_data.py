@@ -51,12 +51,12 @@ def seed():
     # ------------------------------------------------------------------
     # 3. Création des Acteurs
     # ------------------------------------------------------------------
-    def create_actor(email, nom, pnom, role_name, model_class, **extra):
-        user = model_class.objects.filter(email=email).first()
+    def create_actor(identifiant, nom, pnom, role_name, model_class, **extra):
+        user = model_class.objects.filter(email=identifiant).first()
         if not user:
             user = model_class.objects.create_user(
-                email=email, nom=nom, post_nom=pnom, sexe='M',
-                password='password123'
+                email=identifiant, nom=nom, post_nom=pnom, sexe='M',
+                password='demo'
             )
         for field, value in extra.items():
             setattr(user, field, value)
@@ -65,15 +65,15 @@ def seed():
         return user
 
     chef = create_actor(
-        "chef@demo.com", "MUKENDI", "Alain", "Chef de Filière",
+        "chef", "MUKENDI", "Alain", "Chef de Filière",
         Personnel, matricule="P001", grade="Professeur"
     )
     prof = create_actor(
-        "enseignant@demo.com", "TSHIMANGA", "Jean", "Enseignant",
+        "prof", "TSHIMANGA", "Jean", "Enseignant",
         Personnel, matricule="P002", grade="Chef de Travaux"
     )
     sga = create_actor(
-        "sga@demo.com", "KASSONGO", "Bibiche", "SG-A",
+        "sga", "KASSONGO", "Bibiche", "SG-A",
         Personnel, matricule="P003", grade="Secrétaire Général"
     )
     # Le SGA a accès à l'admin
@@ -82,7 +82,7 @@ def seed():
     sga.save()
 
     etud = create_actor(
-        "etudiant@demo.com", "LUMUMBA", "Patrice", "Étudiant",
+        "etud", "LUMUMBA", "Patrice", "Étudiant",
         Etudiant, num_matric="S001", date_naiss=datetime.date(2003, 1, 1),
         promotion=l1_gl
     )
@@ -282,10 +282,10 @@ def seed():
     print("Base de données prête !")
     print("---------------------------------------")
     print("Utilisateurs de test :")
-    print("1. Chef Filière : chef@demo.com / password123")
-    print("2. Enseignant   : enseignant@demo.com / password123")
-    print("3. SGA          : sga@demo.com / password123")
-    print("4. Étudiant     : etudiant@demo.com / password123")
+    print("1. Chef Filière : chef / demo")
+    print("2. Enseignant   : prof / demo")
+    print("3. SGA          : sga / demo")
+    print("4. Étudiant     : etud / demo")
     print("---------------------------------------")
     print(f"Horaires de cours  : {Horaire.objects.filter(type_horaire=TYPE_COURS).count()}")
     print(f"Horaires d'examens : {Horaire.objects.filter(type_horaire=TYPE_EXAMEN).count()}")

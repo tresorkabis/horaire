@@ -60,13 +60,13 @@ WORKFLOW_TRANSITIONS = {
 # ---------------------------------------------------------------------------
 
 class UtilisateurManager(BaseUserManager):
-    """Gestionnaire d'utilisateurs personnalisé utilisant l'email comme identifiant."""
+    """Gestionnaire d'utilisateurs personnalisé utilisant l'identifiant (email)."""
 
     def create_user(self, email, nom, post_nom, sexe, password=None):
         if not email:
-            raise ValueError("L'utilisateur doit avoir une adresse email")
+            raise ValueError("L'utilisateur doit avoir un identifiant")
         user = self.model(
-            email=self.normalize_email(email),
+            email=email,
             nom=nom,
             post_nom=post_nom,
             sexe=sexe,
@@ -97,7 +97,7 @@ class Utilisateur(AbstractBaseUser, PermissionsMixin):
     nom = models.CharField(max_length=100)
     post_nom = models.CharField(max_length=100)
     sexe = models.CharField(max_length=1, choices=SEXE_CHOICES)
-    email = models.EmailField(unique=True)
+    email = models.CharField(max_length=254, unique=True, verbose_name="Identifiant")
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
@@ -335,13 +335,28 @@ class Creneau_Horaire(models.Model):
     """
     Créneau horaire liant un cours, un personnel et une fonction.
     Peut être une proposition isolée d'un enseignant ou faire partie d'un Horaire.
+    
+    - Pour les **cours** : on utilise ``jours`` (Lundi, Mardi…) et ``heure``.
+    - Pour les **examens** : on utilise ``date`` (date précise) et ``heure``.
     """
 
     id_chrono = models.AutoField(primary_key=True)
+    type_horaire = models.CharField(
+        max_length=10,
+        choices=TYPE_HORAIRE_CHOICES,
+        default=TYPE_COURS,
+        help_text="Type de créneau : Cours (jour hebdomadaire) ou Examen (date précise)",
+    )
+    date = models.DateField(
+        null=True, blank=True,
+        help_text="Date précise pour un examen (ex: 15/06/2026). Laisser vide pour un cours hebdomadaire.",
+    )
     heure = models.TimeField()
     jours = models.CharField(
         max_length=20, 
-        choices=JOURS_CHOICES
+        choices=JOURS_CHOICES,
+        null=True, blank=True,
+        help_text="Jour de la semaine pour un cours hebdomadaire. Laisser vide pour un examen avec date.",
     )
     status = models.CharField(
         max_length=20, 
@@ -369,15 +384,22 @@ class Creneau_Horaire(models.Model):
     class Meta:
         verbose_name = "Créneau Horaire"
         verbose_name_plural = "Créneaux Horaires"
-        ordering = ["jours", "heure"]
+        ordering = ["date", "jours", "heure"]
         constraints = [
             models.UniqueConstraint(
-                fields=("jours", "heure", "personnel"), 
-                name="unique_creneau_personnel"
-            )
+                fields=("date", "heure", "personnel"),
+                name="unique_creneau_date_personnel",
+            ),
+            models.UniqueConstraint(
+                fields=("jours", "heure", "personnel"),
+                name="unique_creneau_jour_personnel",
+                condition=models.Q(date__isnull=True),
+            ),
         ]
 
     def __str__(self):
+        if self.date:
+            return f"{self.cours} | {self.date.strftime('%d/%m/%Y')} {self.heure}"
         return f"{self.cours} | {self.jours} {self.heure}"
 
     # -- Workflow ---------------------------------------------------------

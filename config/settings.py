@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(
     DEBUG=(bool, False),
-    DJANGO_ALLOWED_HOSTS=(list, ["127.0.0.1", "localhost"]),
+    DJANGO_ALLOWED_HOSTS=(list, ["*"]),
     DJANGO_TIME_ZONE=(str, "Africa/Kinshasa"),
     CACHE_BACKEND=(str, "locmem"),
     CACHE_LOCATION=(str, "default-cache"),

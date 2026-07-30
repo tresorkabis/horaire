@@ -26,6 +26,7 @@ from .models import (
     Etudiant,
     Filiere,
     Fonction,
+    Horaire,
     Personnel,
     Promotion,
     ROLE_CHEF,
@@ -37,6 +38,8 @@ from .models import (
     STATUS_CONFIRMED,
     STATUS_PUBLISHED,
     STATUS_CHOICES,
+    TYPE_COURS,
+    TYPE_EXAMEN,
 )
 
 # Nombre d'éléments par page pour la pagination
@@ -527,9 +530,17 @@ def delete_student(request, pk):
 
 @role_required(ROLE_CHEF, ROLE_SGA)
 def horaire_list(request):
-    """Liste des emplois du temps globaux (objets Horaire)."""
+    """Liste des emplois du temps globaux (objets Horaire), filtrés par type."""
     user = request.user
-    horaires = Horaire.objects.select_related("promotion", "filiere__nom_filiere").all()
+    type_filtre = request.GET.get("type", TYPE_COURS)
+    
+    # Valider le type
+    if type_filtre not in (TYPE_COURS, TYPE_EXAMEN):
+        type_filtre = TYPE_COURS
+    
+    horaires = Horaire.objects.filter(type_horaire=type_filtre).select_related(
+        "promotion__filiere"
+    )
     
     if user.is_chef:
         # Le chef ne voit que les horaires de sa filière (si définie)
@@ -539,6 +550,9 @@ def horaire_list(request):
     context = {
         "horaires": horaires,
         "user_roles": _roles(user),
+        "type_filtre": type_filtre,
+        "TYPE_COURS": TYPE_COURS,
+        "TYPE_EXAMEN": TYPE_EXAMEN,
     }
     return render(request, "core/horaire_list.html", context)
 
