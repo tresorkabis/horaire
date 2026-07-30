@@ -93,8 +93,6 @@ def login_view(request):
 
 @login_required
 def logout_view(request):
-    if request.method != "POST":
-        return HttpResponseNotAllowed(["POST"])
     logout(request)
     return redirect("login")
 
@@ -133,9 +131,12 @@ def dashboard(request):
             total_propositions=propositions_en_attente.count()
         )
     elif user.is_enseignant and hasattr(request.user, "personnel"):
+        enseignant_creneaux = related_creneaux.filter(personnel=request.user.personnel)
         context.update(
             is_enseignant=True,
-            horaires=related_creneaux.filter(personnel=request.user.personnel),
+            horaires=enseignant_creneaux,
+            cours=enseignant_creneaux.filter(type_horaire=TYPE_COURS),
+            examens=enseignant_creneaux.filter(type_horaire=TYPE_EXAMEN),
         )
     elif user.is_etudiant and hasattr(request.user, "etudiant"):
         # Filtrer les créneaux dont l'horaire global est PUBLISHED et lié à sa promotion
