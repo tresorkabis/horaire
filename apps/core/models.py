@@ -24,6 +24,15 @@ ROLE_ENSEIGNANT = "Enseignant"
 ROLE_ETUDIANT = "Étudiant"
 ROLE_SGA = "SG-A"
 
+#: Types d'horaire.
+TYPE_COURS = "COURS"
+TYPE_EXAMEN = "EXAMEN"
+
+TYPE_HORAIRE_CHOICES = [
+    (TYPE_COURS, "Cours"),
+    (TYPE_EXAMEN, "Examen"),
+]
+
 #: États du workflow de validation des horaires.
 STATUS_DRAFT = "DRAFT"
 STATUS_PROPOSED = "PROPOSED"
@@ -289,12 +298,19 @@ class Horaire(models.Model):
     """
     Conteneur global d'emploi du temps pour une promotion donnée.
     Regroupe plusieurs créneaux horaires pour une validation globale.
+    Peut être de type Cours ou Examen.
     """
     id_horaire = models.AutoField(primary_key=True)
     promotion = models.ForeignKey(
         Promotion, on_delete=models.CASCADE, related_name="horaires"
     )
     titre = models.CharField(max_length=200, help_text="ex: Semestre 1 - 2026")
+    type_horaire = models.CharField(
+        max_length=10,
+        choices=TYPE_HORAIRE_CHOICES,
+        default=TYPE_COURS,
+        help_text="Type d'horaire : Cours ou Examen",
+    )
     status = models.CharField(
         max_length=20, 
         choices=STATUS_CHOICES, 

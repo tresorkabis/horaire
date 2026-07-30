@@ -7,6 +7,7 @@ from .models import (
     Etudiant,
     Filiere,
     Fonction,
+    Horaire,
     Personnel,
     Promotion,
     Role,
@@ -95,6 +96,19 @@ class FonctionAdmin(admin.ModelAdmin):
     list_display = ("id_fonction", "intitule")
     search_fields = ("intitule",)
     ordering = ("intitule",)
+
+
+# ---------------------------------------------------------------------------
+# Horaires (Cours & Examens)
+# ---------------------------------------------------------------------------
+
+@admin.register(Horaire)
+class HoraireAdmin(admin.ModelAdmin):
+    list_display = ("id_horaire", "promotion", "titre", "type_horaire", "status", "date_creation")
+    list_filter = ("type_horaire", "status", "promotion__filiere")
+    search_fields = ("titre", "promotion__designation")
+    autocomplete_fields = ("promotion",)
+    ordering = ("-date_creation",)
 
 
 # ---------------------------------------------------------------------------
