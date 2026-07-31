@@ -48,9 +48,12 @@ class CreneauHoraireForm(BaseForm):
 
     class Meta:
         model = Creneau_Horaire
-        fields = ("type_horaire", "jours", "date", "heure", "cours", "personnel", "fonction", "horaire")
+        fields = ("type_horaire", "jours", "date", "heure", "cours", "personnel", "horaire")
         widgets = {
-            "heure": forms.TimeInput(attrs={"type": "time"}),
+            "heure": forms.Select(choices=[
+                ("08:00:00", "08:00"),
+                ("11:40:00", "11:40"),
+            ]),
             "date": forms.DateInput(attrs={"type": "date"}),
         }
 

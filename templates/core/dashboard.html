@@ -3,128 +3,484 @@
 {% block page_name %}Tableau de bord{% endblock %}
 {% block content %}
 <div class="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end">
-  <div><div class="mb-2 inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-700"><i class="fa-solid fa-sparkles"></i>Bienvenue sur Horaires</div><h1 class="font-display text-3xl font-extrabold tracking-tight text-slate-950 md:text-4xl">Bonjour, {{ user.nom|title }}.</h1><p class="mt-2 text-slate-500">Pilotez la planification académique de l’Université ESFORCA en toute sérénité.</p></div>
-  {% if is_chef %}<a href="{% url 'create_schedule' %}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-brand-700"><i class="fa-solid fa-plus"></i>Créer un créneau l'horaire</a>{% endif %}
+  <div>
+    <div class="mb-2 inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-700"><i class="fa-solid fa-sparkles"></i>Bienvenue sur Horaires</div>
+    <h1 class="font-display text-3xl font-extrabold tracking-tight text-slate-950 md:text-4xl">Bonjour, {{ user.nom|title }}.</h1>
+    <p class="mt-2 text-slate-500">Pilotez la planification académique de l'Université ESFORCA en toute sérénité.</p>
+  </div>
+  {% if is_chef %}
+  <a href="{% url 'create_schedule' %}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-brand-700"><i class="fa-solid fa-plus"></i>Créer un créneau</a>
+  {% endif %}
+  {% if is_enseignant %}
+  <div class="flex gap-3">
+    <a href="{% url 'submit_availability' %}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-brand-700"><i class="fa-regular fa-clock"></i>Mes disponibilités</a>
+    <a href="{% url 'schedule_list' %}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-600 transition hover:-translate-y-0.5 hover:bg-slate-50"><i class="fa-regular fa-calendar-days"></i>Tous mes créneaux</a>
+  </div>
+  {% endif %}
 </div>
 
+{% if not is_enseignant %}
 <div class="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
   {% if is_chef %}
-  <article class="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card transition hover:-translate-y-1"><div class="flex items-start justify-between"><div><p class="text-xs font-bold uppercase tracking-wider text-slate-400">Propositions en attente</p><p class="mt-2 font-display text-3xl font-extrabold text-amber-600">{{ total_propositions }}</p></div><span class="grid h-12 w-12 place-items-center rounded-2xl bg-amber-50 text-xl text-amber-600"><i class="fa-solid fa-hand-holding-medical"></i></span></div><div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Créneaux à intégrer</div></article>
+  <article class="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card transition hover:-translate-y-1">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Propositions en attente</p>
+        <p class="mt-2 font-display text-3xl font-extrabold text-amber-600">{{ total_propositions }}</p>
+      </div>
+      <span class="grid h-12 w-12 place-items-center rounded-2xl bg-amber-50 text-xl text-amber-600"><i class="fa-solid fa-hand-holding-medical"></i></span>
+    </div>
+    <div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Créneaux à intégrer</div>
+  </article>
   {% endif %}
 
-  <article class="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card transition hover:-translate-y-1"><div class="flex items-start justify-between"><div><p class="text-xs font-bold uppercase tracking-wider text-slate-400">Total horaires</p><p class="mt-2 font-display text-3xl font-extrabold text-slate-950">{{ horaires|length }}</p></div><span class="grid h-12 w-12 place-items-center rounded-2xl bg-blue-50 text-xl text-blue-600"><i class="fa-regular fa-calendar"></i></span></div><div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Créneaux accessibles à votre rôle</div></article>
-  <article class="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card transition hover:-translate-y-1"><div class="flex items-start justify-between"><div><p class="text-xs font-bold uppercase tracking-wider text-slate-400">Horaires publiés</p><p class="mt-2 font-display text-3xl font-extrabold text-emerald-700">{{ published_count }}</p></div><span class="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-50 text-xl text-emerald-600"><i class="fa-regular fa-circle-check"></i></span></div><div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Disponibles en consultation</div></article>
-  <article class="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card transition hover:-translate-y-1"><div class="flex items-start justify-between"><div><p class="text-xs font-bold uppercase tracking-wider text-slate-400">En traitement</p><p class="mt-2 font-display text-3xl font-extrabold text-amber-600">{{ pending_count }}</p></div><span class="grid h-12 w-12 place-items-center rounded-2xl bg-amber-50 text-xl text-amber-600"><i class="fa-regular fa-hourglass-half"></i></span></div><div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Proposés ou confirmés</div></article>
-  <article class="group rounded-2xl border-2 border-brand-100 bg-white p-5 shadow-card transition hover:-translate-y-1"><div class="flex items-start justify-between"><div><p class="text-xs font-bold uppercase tracking-wider text-brand-500">Votre profil</p><p class="mt-2 font-display text-xl font-extrabold text-slate-900">{% for role in user_roles %}{{ role }}{% if not forloop.last %}, {% endif %}{% empty %}Utilisateur{% endfor %}</p></div><span class="grid h-12 w-12 place-items-center rounded-2xl bg-brand-50 text-xl text-brand-600"><i class="fa-solid fa-user-shield"></i></span></div><div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Accès sécurisé et adapté</div></article>
+  <article class="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card transition hover:-translate-y-1">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Total horaires</p>
+        <p class="mt-2 font-display text-3xl font-extrabold text-slate-950">{{ horaires|length }}</p>
+      </div>
+      <span class="grid h-12 w-12 place-items-center rounded-2xl bg-blue-50 text-xl text-blue-600"><i class="fa-regular fa-calendar"></i></span>
+    </div>
+    <div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Créneaux accessibles à votre rôle</div>
+  </article>
+
+  <article class="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card transition hover:-translate-y-1">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Horaires publiés</p>
+        <p class="mt-2 font-display text-3xl font-extrabold text-emerald-700">{{ published_count }}</p>
+      </div>
+      <span class="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-50 text-xl text-emerald-600"><i class="fa-regular fa-circle-check"></i></span>
+    </div>
+    <div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Disponibles en consultation</div>
+  </article>
+
+  <article class="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card transition hover:-translate-y-1">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">En traitement</p>
+        <p class="mt-2 font-display text-3xl font-extrabold text-amber-600">{{ pending_count }}</p>
+      </div>
+      <span class="grid h-12 w-12 place-items-center rounded-2xl bg-amber-50 text-xl text-amber-600"><i class="fa-regular fa-hourglass-half"></i></span>
+    </div>
+    <div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Proposés ou confirmés</div>
+  </article>
+
+  <article class="group rounded-2xl border-2 border-brand-100 bg-white p-5 shadow-card transition hover:-translate-y-1">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-brand-500">Votre profil</p>
+        <p class="mt-2 font-display text-xl font-extrabold text-slate-900">
+          {% for role in user_roles %}{{ role }}{% if not forloop.last %}, {% endif %}{% empty %}Utilisateur{% endfor %}
+        </p>
+      </div>
+      <span class="grid h-12 w-12 place-items-center rounded-2xl bg-brand-50 text-xl text-brand-600"><i class="fa-solid fa-user-shield"></i></span>
+    </div>
+    <div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Accès sécurisé et adapté</div>
+  </article>
 </div>
+{% endif %}
+
+{% if is_enseignant %}
+<!-- Statistiques de l'enseignant -->
+<div class="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+  <article class="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card transition hover:-translate-y-1">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Mes cours</p>
+        <p class="mt-2 font-display text-3xl font-extrabold text-violet-600">{{ cours_count }}</p>
+      </div>
+      <span class="grid h-12 w-12 place-items-center rounded-2xl bg-violet-50 text-xl text-violet-600"><i class="fa-solid fa-book-open"></i></span>
+    </div>
+    <div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Cours hebdomadaires</div>
+  </article>
+
+  <article class="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card transition hover:-translate-y-1">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Mes examens</p>
+        <p class="mt-2 font-display text-3xl font-extrabold text-amber-600">{{ examens_count }}</p>
+      </div>
+      <span class="grid h-12 w-12 place-items-center rounded-2xl bg-amber-50 text-xl text-amber-600"><i class="fa-solid fa-pen-to-square"></i></span>
+    </div>
+    <div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Examens planifiés</div>
+  </article>
+
+  <article class="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card transition hover:-translate-y-1">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Cours aujourd'hui</p>
+        <p class="mt-2 font-display text-3xl font-extrabold text-brand-600">{{ cours_aujourdhui_count }}</p>
+      </div>
+      <span class="grid h-12 w-12 place-items-center rounded-2xl bg-brand-50 text-xl text-brand-600"><i class="fa-regular fa-calendar-day"></i></span>
+    </div>
+    <div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Séances du jour</div>
+  </article>
+
+  <article class="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card transition hover:-translate-y-1">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Disponibilités</p>
+        <p class="mt-2 font-display text-3xl font-extrabold text-emerald-700">{{ disponibilites_count }}</p>
+      </div>
+      <span class="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-50 text-xl text-emerald-600"><i class="fa-regular fa-circle-check"></i></span>
+    </div>
+    <div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Créneaux déclarés</div>
+  </article>
+
+  <article class="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card transition hover:-translate-y-1">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Cours publiés</p>
+        <p class="mt-2 font-display text-3xl font-extrabold text-emerald-700">{{ cours_published }}</p>
+      </div>
+      <span class="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-50 text-xl text-emerald-600"><i class="fa-solid fa-check-double"></i></span>
+    </div>
+    <div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Horaires officiels</div>
+  </article>
+
+  <article class="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card transition hover:-translate-y-1">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">En traitement</p>
+        <p class="mt-2 font-display text-3xl font-extrabold text-amber-600">{{ cours_pending }}</p>
+      </div>
+      <span class="grid h-12 w-12 place-items-center rounded-2xl bg-amber-50 text-xl text-amber-600"><i class="fa-regular fa-hourglass-half"></i></span>
+    </div>
+    <div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Proposés ou confirmés</div>
+  </article>
+
+  <article class="group rounded-2xl border-2 border-brand-100 bg-white p-5 shadow-card transition hover:-translate-y-1">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-brand-500">Votre profil</p>
+        <p class="mt-2 font-display text-xl font-extrabold text-slate-900">
+          {% for role in user_roles %}{{ role }}{% if not forloop.last %}, {% endif %}{% empty %}Utilisateur{% endfor %}
+        </p>
+      </div>
+      <span class="grid h-12 w-12 place-items-center rounded-2xl bg-brand-50 text-xl text-brand-600"><i class="fa-solid fa-user-shield"></i></span>
+    </div>
+    <div class="mt-5 border-t border-slate-100 pt-3 text-xs text-slate-400">Accès sécurisé et adapté</div>
+  </article>
+</div>
+
+<!-- Cours du jour -->
+{% if cours_aujourdhui %}
+<section class="mb-8 overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-card">
+  <header class="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="font-display text-lg font-extrabold text-slate-950">Cours d'aujourd'hui</h2>
+      <p class="mt-1 text-xs text-slate-400">Vos séances programmées aujourd'hui</p>
+    </div>
+    <span class="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700"><i class="fa-regular fa-calendar-day"></i>{{ cours_aujourdhui_count }} séance(s)</span>
+  </header>
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[700px] text-left text-sm">
+      <thead class="bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        <tr>
+          <th class="px-6 py-4">Cours</th>
+          <th class="px-6 py-4">Heure</th>
+          <th class="px-6 py-4">État</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for h in cours_aujourdhui %}
+        <tr class="group transition hover:bg-brand-50/30">
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <span class="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-600"><i class="fa-solid fa-book-open"></i></span>
+              <div>
+                <p class="text-sm font-bold text-slate-800">{{ h.cours.titre }}</p>
+                <p class="text-xs text-slate-400">{{ h.cours.duree }} minutes</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <span class="rounded-md bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700">{{ h.heure|time:"H:i" }}</span>
+          </td>
+          <td class="px-6 py-4">{% include 'core/partials/status_badge.html' with status=h.status %}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="3" class="px-6 py-12 text-center text-slate-400 text-sm">Aucun cours programmé aujourd'hui.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+<!-- Disponibilités -->
+<section class="mb-8 overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-card">
+  <header class="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="font-display text-lg font-extrabold text-slate-950">Mes disponibilités</h2>
+      <p class="mt-1 text-xs text-slate-400">Créneaux horaires déclarés au secrétariat</p>
+    </div>
+    <a href="{% url 'submit_availability' %}" class="text-sm font-bold text-brand-600 hover:text-brand-700">Gérer <i class="fa-solid fa-arrow-right ml-2"></i></a>
+  </header>
+  {% if disponibilites %}
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[600px] text-left text-sm">
+      <thead class="bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        <tr>
+          <th class="px-6 py-4">Jour</th>
+          <th class="px-6 py-4">Heure début</th>
+          <th class="px-6 py-4">Heure fin</th>
+          <th class="px-6 py-4">Note</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for d in disponibilites %}
+        <tr class="group transition hover:bg-brand-50/30">
+          <td class="px-6 py-4">
+            <span class="rounded-md bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700">{{ d.jour }}</span>
+          </td>
+          <td class="px-6 py-4 text-sm font-semibold text-slate-700">{{ d.heure_debut|time:"H:i" }}</td>
+          <td class="px-6 py-4 text-sm font-semibold text-slate-700">{{ d.heure_fin|time:"H:i" }}</td>
+          <td class="px-6 py-4 text-xs text-slate-400">{{ d.note|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="grid place-items-center px-6 py-16 text-center">
+    <span class="grid h-16 w-16 place-items-center rounded-3xl bg-amber-50 text-2xl text-amber-600"><i class="fa-regular fa-clock"></i></span>
+    <h3 class="mt-4 font-display text-lg font-extrabold">Aucune disponibilité déclarée</h3>
+    <p class="mt-2 max-w-sm text-sm text-slate-400">Communiquez vos créneaux disponibles au secrétariat pour faciliter la planification.</p>
+    <a href="{% url 'submit_availability' %}" class="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-brand-700"><i class="fa-solid fa-plus"></i>Déclarer mes disponibilités</a>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
 
 {% if is_chef %}
 <section class="mb-8 overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-card">
-    <header class="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-        <div><h2 class="font-display text-lg font-extrabold text-slate-950">Propositions en attente</h2><p class="mt-1 text-xs text-slate-400">Intégrez ces créneaux dans vos emplois du temps</p></div>
-        <a href="{% url 'propositions_list' %}" class="text-sm font-bold text-brand-600 hover:text-brand-700">Gérer tout <i class="fa-solid fa-arrow-right ml-2"></i></a>
-    </header>
-    <div class="overflow-x-auto">
-        <table class="w-full min-w-[800px] text-left text-sm">
-            <thead class="bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                <tr>
-                    <th class="px-6 py-4">Cours</th>
-                    <th class="px-6 py-4">Enseignant</th>
-                    <th class="px-6 py-4">Horaire</th>
-                    <th class="px-6 py-4 text-right">Action</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-                {% for p in propositions_en_attente %}
-                <tr class="group transition hover:bg-brand-50/30">
-                    <td class="px-6 py-4">
-                        <p class="text-sm font-bold text-slate-800">{{ p.cours.titre }}</p>
-                        <p class="text-xs text-slate-400">{{ p.fonction.intitule }}</p>
-                    </td>
-                    <td class="px-6 py-4">
-                        <p class="text-sm font-semibold text-slate-700">{{ p.personnel.nom }}</p>
-                        <p class="text-xs text-slate-400">{{ p.personnel.post_nom }}</p>
-                    </td>
-                    <td class="px-6 py-4">
-                        {% if p.date %}
-                        <span class="rounded-md bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700">{{ p.date|date:"d/m/Y" }}</span>
-                        {% else %}
-                        <span class="rounded-md bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700">{{ p.jours }}</span>
-                        {% endif %}
-                        <span class="text-xs font-medium text-slate-600 ml-1">{{ p.heure|time:"H:i" }}</span>
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                        <a href="{% url 'create_schedule' %}" class="inline-flex items-center gap-2 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-brand-600">
-                            <i class="fa-solid fa-plus"></i> Intégrer
-                        </a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4" class="px-6 py-12 text-center text-slate-400 text-sm italic">
-                        Aucune proposition en attente de traitement.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+  <header class="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="font-display text-lg font-extrabold text-slate-950">Propositions en attente</h2>
+      <p class="mt-1 text-xs text-slate-400">Intégrez ces créneaux dans vos emplois du temps</p>
     </div>
+    <a href="{% url 'propositions_list' %}" class="text-sm font-bold text-brand-600 hover:text-brand-700">Gérer tout <i class="fa-solid fa-arrow-right ml-2"></i></a>
+  </header>
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[800px] text-left text-sm">
+      <thead class="bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        <tr>
+          <th class="px-6 py-4">Cours</th>
+          <th class="px-6 py-4">Enseignant</th>
+          <th class="px-6 py-4">Horaire</th>
+          <th class="px-6 py-4 text-right">Action</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for p in propositions_en_attente %}
+        <tr class="group transition hover:bg-brand-50/30">
+          <td class="px-6 py-4">
+            <p class="text-sm font-bold text-slate-800">{{ p.cours.titre }}</p>
+            <p class="text-xs text-slate-400">{{ p.fonction.intitule }}</p>
+          </td>
+          <td class="px-6 py-4">
+            <p class="text-sm font-semibold text-slate-700">{{ p.personnel.nom }}</p>
+            <p class="text-xs text-slate-400">{{ p.personnel.post_nom }}</p>
+          </td>
+          <td class="px-6 py-4">
+            {% if p.date %}
+            <span class="rounded-md bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700">{{ p.date|date:"d/m/Y" }}</span>
+            {% else %}
+            <span class="rounded-md bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700">{{ p.jours }}</span>
+            {% endif %}
+            <span class="text-xs font-medium text-slate-600 ml-1">{{ p.heure|time:"H:i" }}</span>
+          </td>
+          <td class="px-6 py-4 text-right">
+            <a href="{% url 'create_schedule' %}" class="inline-flex items-center gap-2 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-brand-600"><i class="fa-solid fa-plus"></i> Intégrer</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" class="px-6 py-12 text-center text-slate-400 text-sm italic">Aucune proposition en attente de traitement.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </section>
 {% endif %}
 
 {% if is_enseignant %}
 <section class="mb-8 overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-card">
-    <header class="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-        <div><h2 class="font-display text-lg font-extrabold text-slate-950">Mes créneaux</h2><p class="mt-1 text-xs text-slate-400">Vos séances de cours et examens</p></div>
-        <div class="flex gap-2">
-            <a href="?type=COURS" class="rounded-xl px-4 py-2 text-xs font-bold {% if not request.GET.type or request.GET.type == 'COURS' %}bg-brand-600 text-white shadow-lg{% else %}border border-slate-200 bg-white text-slate-500{% endif %}">Cours ({{ cours|length }})</a>
-            <a href="?type=EXAMEN" class="rounded-xl px-4 py-2 text-xs font-bold {% if request.GET.type == 'EXAMEN' %}bg-brand-600 text-white shadow-lg{% else %}border border-slate-200 bg-white text-slate-500{% endif %}">Examens ({{ examens|length }})</a>
-        </div>
-    </header>
-    <div class="overflow-x-auto">
-        <table class="w-full min-w-[900px] text-left text-sm">
-            <thead class="bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                <tr><th class="px-6 py-4">Cours</th><th class="px-6 py-4">Enseignant</th><th class="px-6 py-4">Planification</th><th class="px-6 py-4">État</th><th class="px-6 py-4 text-right">Actions</th></tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-            {% if request.GET.type == 'EXAMEN' %}
-                {% for h in examens|slice:':8' %}
-            {% else %}
-                {% for h in cours|slice:':8' %}
-            {% endif %}
-                <tr class="group transition hover:bg-brand-50/30">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <span class="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-600"><i class="fa-solid fa-book-open"></i></span>
-                            <div><p class="text-sm font-bold text-slate-800">{{ h.cours.titre }}</p><p class="text-xs text-slate-400">{{ h.cours.duree }} minutes · {{ h.fonction.intitule|default:'Séance' }}</p></div>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4"><p class="text-sm font-semibold">{{ h.personnel.nom }} {{ h.personnel.post_nom }}</p><p class="text-xs text-slate-400">{{ h.personnel.grade }}</p></td>
-                    <td class="px-6 py-4">{% if h.date %}<p class="text-sm font-semibold">{{ h.date|date:'d/m/Y' }}</p>{% else %}<p class="text-sm font-semibold">{{ h.jours }}</p>{% endif %}<p class="text-xs text-slate-400">{{ h.heure|time:'H:i' }}</p></td>
-                    <td class="px-6 py-4">{% include 'core/partials/status_badge.html' with status=h.status %}</td>
-                    <td class="px-6 py-4"><div class="flex justify-end gap-2">
-                        <button title="Annoter" onclick="openModal('annotation-{{ h.pk }}')" class="grid h-9 w-9 place-items-center rounded-lg bg-amber-50 text-amber-700"><i class="fa-regular fa-message"></i></button>
-                    </div></td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 text-sm">Aucun créneau dans cette catégorie.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+  <header class="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="font-display text-lg font-extrabold text-slate-950">Mes créneaux</h2>
+      <p class="mt-1 text-xs text-slate-400">Vos séances de cours et examens</p>
     </div>
+    <div class="flex gap-2">
+      <a href="{% url 'dashboard' %}?type=COURS" class="rounded-xl px-4 py-2 text-xs font-bold {% if type_filtre_dashboard != 'EXAMEN' %}bg-brand-600 text-white shadow-lg{% else %}border border-slate-200 bg-white text-slate-500{% endif %}">Cours ({{ cours_count }})</a>
+      <a href="{% url 'dashboard' %}?type=EXAMEN" class="rounded-xl px-4 py-2 text-xs font-bold {% if type_filtre_dashboard == 'EXAMEN' %}bg-brand-600 text-white shadow-lg{% else %}border border-slate-200 bg-white text-slate-500{% endif %}">Examens ({{ examens_count }})</a>
+    </div>
+  </header>
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[900px] text-left text-sm">
+      <thead class="bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        <tr>
+          <th class="px-6 py-4">Cours</th>
+          <th class="px-6 py-4">Enseignant</th>
+          <th class="px-6 py-4">Planification</th>
+          <th class="px-6 py-4">Promotion</th>
+          <th class="px-6 py-4">État</th>
+          <th class="px-6 py-4 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for h in creneaux_a_afficher %}
+        <tr class="group transition hover:bg-brand-50/30">
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <span class="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-600"><i class="fa-solid fa-book-open"></i></span>
+              <div>
+                <p class="text-sm font-bold text-slate-800">{{ h.cours.titre }}</p>
+                <p class="text-xs text-slate-400">{{ h.cours.duree }} minutes</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <p class="text-sm font-semibold">{{ h.personnel.nom }} {{ h.personnel.post_nom }}</p>
+            <p class="text-xs text-slate-400">{{ h.personnel.grade }}</p>
+          </td>
+          <td class="px-6 py-4">
+            {% if h.date %}
+            <p class="text-sm font-semibold">{{ h.date|date:"d/m/Y" }}</p>
+            {% else %}
+            <p class="text-sm font-semibold">{{ h.jours }}</p>
+            {% endif %}
+            <p class="text-xs text-slate-400">{{ h.heure|time:"H:i" }}</p>
+          </td>
+          <td class="px-6 py-4">
+            {% if h.horaire %}
+            <p class="text-sm font-semibold text-slate-700">{{ h.horaire.promotion.designation }}</p>
+            <p class="text-xs text-slate-400">{{ h.horaire.promotion.filiere.nom_filiere }}</p>
+            {% else %}
+            <span class="text-xs text-slate-400 italic">Non assigné</span>
+            {% endif %}
+          </td>
+          <td class="px-6 py-4">{% include 'core/partials/status_badge.html' with status=h.status %}</td>
+          <td class="px-6 py-4">
+            <div class="flex justify-end gap-2">
+              <button title="Annoter" onclick="openModal('annotation-{{ h.pk }}')" class="grid h-9 w-9 place-items-center rounded-lg bg-amber-50 text-amber-700"><i class="fa-regular fa-message"></i></button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="px-6 py-12 text-center text-slate-400 text-sm">Aucun créneau dans cette catégorie.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </section>
+
+<!-- Modals d'annotation -->
+{% for h in creneaux_a_afficher %}
+<div id="annotation-{{ h.pk }}" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/50 backdrop-blur-sm" onclick="if(event.target===this) closeModal('annotation-{{ h.pk }}')">
+  <div class="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h3 class="font-display text-lg font-extrabold text-slate-950">Annoter le créneau</h3>
+        <p class="text-xs text-slate-400">{{ h.cours.titre }} — {% if h.jours %}{{ h.jours }}{% else %}{{ h.date|date:"d/m/Y" }}{% endif %} à {{ h.heure|time:"H:i" }}</p>
+      </div>
+      <button onclick="closeModal('annotation-{{ h.pk }}')" class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form method="post" action="{% url 'annotate_schedule' h.pk %}">
+      {% csrf_token %}
+      <div class="mb-4">
+        <label class="mb-2 block text-xs font-bold text-slate-500">Votre annotation</label>
+        <textarea name="annotations" rows="4" class="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm outline-none transition focus:border-brand-500 focus:bg-white" placeholder="Saisissez vos remarques, demandes de modification...">{{ h.annotations|default:"" }}</textarea>
+      </div>
+      <div class="flex justify-end gap-3">
+        <button type="button" onclick="closeModal('annotation-{{ h.pk }}')" class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50">Annuler</button>
+        <button type="submit" class="rounded-xl bg-brand-600 px-4 py-2 text-sm font-bold text-white shadow-lg hover:bg-brand-700"><i class="fa-solid fa-paper-plane mr-1"></i>Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endfor %}
 {% endif %}
 
-<section class="overflow-hidden rounded-3xl border border la-slate-200/70 bg-white shadow-card">
-  <header class="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between"><div><h2 class="font-display text-lg font-extrabold text-slate-950">Planification académique</h2><p class="mt-1 text-xs text-slate-400">Suivi du workflow de validation des horaires</p></div><a href="{% url 'schedule_list' %}" class="text-sm font-bold text-brand-600 hover:text-brand-700">Voir tous les horaires <i class="fa-solid fa-arrow-right ml-2"></i></a></header>
-  {% if horaires %}<div class="overflow-x-auto"><table class="w-full min-w-[900px] text-left"><thead class="bg-slate-50/80 text-[10px] font-bold uppercase tracking-[.14em] text-slate-400"><tr><th class="px-6 py-4">Cours</th><th class="px-6 py-4">Enseignant</th><th class="px-6 py-4">Planification</th><th class="px-6 py-4">État</th><th class="px-6 py-4 text-right">Actions</th></tr></thead><tbody class="divide-y divide-slate-100">
-  {% for h in horaires|slice:':8' %}<tr class="group transition hover:bg-brand-50/30"><td class="px-6 py-4"><div class="flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-s600"><i class="fa-solid fa-book-open"></i></span><div><p class="text-sm font-bold text-slate-800">{{ h.cours.titre }}</p><p class="text-xs text-slate-400">{{ h.cours.duree }} minutes · {{ h.fonction.intitule|default:'Séance' }}</p></div></div></td><td class="px-6 py-4"><p class="text-sm font-semibold">{{ h.personnel.nom }} {{ h.personnel.post_nom }}</p><p class="text-xs text-slate-400">{{ h.personnel.grade }}</p></td><td class="px-6 py-4">{% if h.date %}<p class="text-sm font-semibold">{{ h.date|date:"d/m/Y" }}</p>{% else %}<p class="text-sm font-semibold">{{ h.jours }}</p>{% endif %}<p class="text-xs text-slate-400">{{ h.heure|time:'H:i' }}</p></td><td class="px-6 py-4">{% include 'core/partials/status_badge.html' with status=h.status %}</td><td class="px-6 py-4"><div class="flex justify-end gap-2">
-    {% if is_chef and h.status == 'DRAFT' or is_chef and h.status == 'PROPOSED' %}<a title="Modifier" href="{% url 'edit_schedule' h.pk %}" class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 text-slate-500 hover:border-brand-200 hover:text-brand-600"><i class="fa-solid fa-pen text-xs"></i></a>{% endif %}
-    {% if is_sga and h.status == 'PROPOSED' %}<form method="post" action="{% url 'confirm_schedule' h.pk %}">{% csrf_token %}<button title="Confirmer" class="grid h-9 w-9 place-items-center rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100"><i class="fa-solid fa-check"></i></button></form>{% endif %}
-    {% if is_chef and h.status == 'CONFIRMED' %}<form method="post" action="{% url 'publish_schedule' h.pk %}">{% csrf_token %}<button title="Publier" class="grid h-9 w-9 place-items-center rounded-lg bg-brand-50 text-brand-700 hover:bg-brand-100"><i class="fa-solid fa-paper-plane"></i></button></form>{% endif %}
-    {% if is_enseignant %}<button title="Annoter" onclick="openModal('annotation-{{ h.pk }}')" class="grid h-9 w-9 place-items-center rounded-lg bg-amber-50 text-amber-700"><i class="fa-regular fa-message"></i></button>{% endif %}
-  </div></td></tr>
-  {% if is_enseignant %}<div id="annotation-{{ h.pk }}" class="fixed inset-0 z-[70] hidden bg-navy/60 p-4 backdrop-blur-sm"><div class="mx-auto mt-[12vh] max-w-lg rounded-3xl bg-white p-7 shadow-2xl"><div class="mb-5 flex items-center justify-between"><div><p class="text-xs font-bold uppercase tracking-wider text-brand-600">C'est quoi l'idée ?</p><h3 class="font-display text-xl font-extrabold">Annoter {{ h.cours.titre }}</h3></div><button onclick="closeModal('annotation-{{ h.pk }}')" class="grid h-9 w-9 place-items-center rounded-full bg-slate-100"><i class="fa-solid fa-xmark"></i></button></div><form method="post" action="{% url 'annotate_schedule' h.pk %}">{% csrf_token %}<textarea name="annotations" rows="5" class="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 outline-none focus:border-brand-500" placeholder="Expliquez clairement votre demande…">{{ h.annotations|default:'' }}</textarea><div class="mt-5 flex justify-end gap-3"><button type="button" onclick="closeModal('annotation-{{ h.pk }}')" class="rounded-xl px-5 py-2.5 text-sm font-bold text-slate-500">Annuler</button><button class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-bold text-white">Enregistrer</button></div></form></div></div>{% endif %}
-  {% endfor %}</tbody></table></div>{% else %}<div class="grid place-items-center px-6 py-20 text-center"><span class="grid h-20 w-20 place-items-center rounded-3xl bg-brand-50 text-3xl text-brand-500"><i class="fa-regular fa-calendar-plus"></i></span><h3 class="mt-5 font-display text-xl font-extrabold">Aucun horaire disponible</h3><p class="mt-2 max-w-sm text-sm text-slate-400">C'est quoi l'idée ? Les planifications correspondant à votre profil apparaîtront ici.</p></div>{% endif %}
+{% if not is_enseignant %}
+<section class="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-card">
+  <header class="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="font-display text-lg font-extrabold text-slate-950">Planification académique</h2>
+      <p class="mt-1 text-xs text-slate-400">Suivi du workflow de validation des horaires</p>
+    </div>
+    <a href="{% url 'schedule_list' %}" class="text-sm font-bold text-brand-600 hover:text-brand-700">Voir tous les horaires <i class="fa-solid fa-arrow-right ml-2"></i></a>
+  </header>
+  {% if horaires %}
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[900px] text-left">
+      <thead class="bg-slate-50/80 text-[10px] font-bold uppercase tracking-[.14em] text-slate-400">
+        <tr>
+          <th class="px-6 py-4">Cours</th>
+          <th class="px-6 py-4">Enseignant</th>
+          <th class="px-6 py-4">Planification</th>
+          <th class="px-6 py-4">État</th>
+          <th class="px-6 py-4 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for h in horaires|slice:':8' %}
+        <tr class="group transition hover:bg-brand-50/30">
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <span class="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-600"><i class="fa-solid fa-book-open"></i></span>
+              <div>
+                <p class="text-sm font-bold text-slate-800">{{ h.cours.titre }}</p>
+                <p class="text-xs text-slate-400">{{ h.cours.duree }} minutes ·</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <p class="text-sm font-semibold">{{ h.personnel.nom }} {{ h.personnel.post_nom }}</p>
+            <p class="text-xs text-slate-400">{{ h.personnel.grade }}</p>
+          </td>
+          <td class="px-6 py-4">
+            {% if h.date %}
+            <p class="text-sm font-semibold">{{ h.date|date:"d/m/Y" }}</p>
+            {% else %}
+            <p class="text-sm font-semibold">{{ h.jours }}</p>
+            {% endif %}
+            <p class="text-xs text-slate-400">{{ h.heure|time:"H:i" }}</p>
+          </td>
+          <td class="px-6 py-4">{% include 'core/partials/status_badge.html' with status=h.status %}</td>
+          <td class="px-6 py-4">
+            <div class="flex justify-end gap-2">
+              {% if is_chef and h.status == 'DRAFT' or is_chef and h.status == 'PROPOSED' %}
+              <a title="Modifier" href="{% url 'edit_schedule' h.pk %}" class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 text-slate-500 hover:border-brand-200 hover:text-brand-600"><i class="fa-solid fa-pen text-xs"></i></a>
+              {% endif %}
+              {% if is_sga and h.status == 'PROPOSED' %}
+              <form method="post" action="{% url 'confirm_schedule' h.pk %}">{% csrf_token %}<button title="Confirmer" class="grid h-9 w-9 place-items-center rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100"><i class="fa-solid fa-check"></i></button></form>
+              {% endif %}
+              {% if is_chef and h.status == 'CONFIRMED' %}
+              <form method="post" action="{% url 'publish_schedule' h.pk %}">{% csrf_token %}<button title="Publier" class="grid h-9 w-9 place-items-center rounded-lg bg-brand-50 text-brand-700 hover:bg-brand-100"><i class="fa-solid fa-paper-plane"></i></button></form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="grid place-items-center px-6 py-20 text-center">
+    <span class="grid h-20 w-20 place-items-center rounded-3xl bg-brand-50 text-3xl text-brand-500"><i class="fa-regular fa-calendar-plus"></i></span>
+    <h3 class="mt-5 font-display text-xl font-extrabold">Aucun horaire disponible</h3>
+    <p class="mt-2 max-w-sm text-sm text-slate-400">C'est quoi l'idée ? Les planifications correspondant à votre profil apparaîtront ici.</p>
+  </div>
+  {% endif %}
 </section>
+{% endif %}
 {% endblock %}

@@ -1,3 +1,4 @@
+import datetime
 from functools import wraps
 
 from django.contrib import messages
@@ -109,7 +110,7 @@ def dashboard(request):
     context = {"user_roles": roles, "horaires": Creneau_Horaire.objects.none()}
 
     # Requête de base optimisée
-    related_creneaux = Creneau_Horaire.objects.select_related("cours", "personnel", "fonction", "horaire")
+    related_creneaux = Creneau_Horaire.objects.select_related("cours", "personnel", "horaire")
 
     if user.is_sga:
         context.update(is_sga=True, horaires=related_creneaux, personnels=Personnel.objects.all())
@@ -132,11 +133,55 @@ def dashboard(request):
         )
     elif user.is_enseignant and hasattr(request.user, "personnel"):
         enseignant_creneaux = related_creneaux.filter(personnel=request.user.personnel)
+        cours = enseignant_creneaux.filter(type_horaire=TYPE_COURS)
+        examens = enseignant_creneaux.filter(type_horaire=TYPE_EXAMEN)
+        type_filtre_dashboard = request.GET.get("type", TYPE_COURS)
+        if type_filtre_dashboard == TYPE_EXAMEN:
+            creneaux_a_afficher = examens
+        else:
+            creneaux_a_afficher = cours
+
+        # Statistiques pour l'enseignant
+        cours_published = cours.filter(horaire__status=STATUS_PUBLISHED).count()
+        cours_pending = cours.filter(
+            horaire__status__in=(STATUS_PROPOSED, STATUS_CONFIRMED)
+        ).count()
+        examens_published = examens.filter(horaire__status=STATUS_PUBLISHED).count()
+        examens_pending = examens.filter(
+            horaire__status__in=(STATUS_PROPOSED, STATUS_CONFIRMED)
+        ).count()
+
+        # Disponibilités de l'enseignant
+        disponibilites = Disponibilite.objects.filter(
+            enseignant=request.user.personnel
+        ).order_by("jour", "heure_debut")
+
+        # Cours du jour (aujourd'hui)
+        today_name = datetime.date.today().strftime("%A")
+        jour_map = {
+            "Monday": "Lundi", "Tuesday": "Mardi", "Wednesday": "Mercredi",
+            "Thursday": "Jeudi", "Friday": "Vendredi", "Saturday": "Samedi",
+        }
+        today_fr = jour_map.get(today_name, "")
+        cours_aujourdhui = cours.filter(jours=today_fr) if today_fr else cours.none()
+
         context.update(
             is_enseignant=True,
             horaires=enseignant_creneaux,
-            cours=enseignant_creneaux.filter(type_horaire=TYPE_COURS),
-            examens=enseignant_creneaux.filter(type_horaire=TYPE_EXAMEN),
+            cours=cours,
+            examens=examens,
+            creneaux_a_afficher=creneaux_a_afficher,
+            type_filtre_dashboard=type_filtre_dashboard,
+            cours_count=cours.count(),
+            examens_count=examens.count(),
+            cours_published=cours_published,
+            cours_pending=cours_pending,
+            examens_published=examens_published,
+            examens_pending=examens_pending,
+            disponibilites=disponibilites,
+            disponibilites_count=disponibilites.count(),
+            cours_aujourdhui=cours_aujourdhui,
+            cours_aujourdhui_count=cours_aujourdhui.count(),
         )
     elif user.is_etudiant and hasattr(request.user, "etudiant"):
         # Filtrer les créneaux dont l'horaire global est PUBLISHED et lié à sa promotion
@@ -171,15 +216,19 @@ def schedule_list(request):
     roles = _roles(user)
     context = {"user_roles": roles}
 
-    horaires = Creneau_Horaire.objects.select_related("cours", "personnel", "fonction")
+    horaires = Creneau_Horaire.objects.select_related(
+        "cours", "personnel", "horaire__promotion__filiere"
+    )
 
-    if user.is_sga:
+    # Priorité à l'enseignant : si l'utilisateur est enseignant et a un profil personnel,
+    # on filtre par ses créneaux, même s'il a aussi un autre rôle (chef, SGA).
+    if user.is_enseignant and hasattr(request.user, "personnel"):
+        context["is_enseignant"] = True
+        horaires = horaires.filter(personnel=request.user.personnel)
+    elif user.is_sga:
         context["is_sga"] = True
     elif user.is_chef:
         context["is_chef"] = True
-    elif user.is_enseignant and hasattr(request.user, "personnel"):
-        context["is_enseignant"] = True
-        horaires = horaires.filter(personnel=request.user.personnel)
     elif user.is_etudiant:
         context["is_etudiant"] = True
         # Filtrer par promotion si l'étudiant est connecté
@@ -213,6 +262,14 @@ def schedule_list(request):
     promotions = Promotion.objects.all().order_by("filiere__nom_filiere", "designation")
 
     context.update(active_status=status, search=search, promotions=promotions, active_promotion=promotion_id)
+
+    # Filtrage par type (cours / examen) pour la page de gestion des créneaux
+    type_filtre = request.GET.get("type_horaire", "")
+    if type_filtre in (TYPE_COURS, TYPE_EXAMEN):
+        horaires = horaires.filter(type_horaire=type_filtre)
+    context["type_filtre"] = type_filtre
+    context["TYPE_COURS"] = TYPE_COURS
+    context["TYPE_EXAMEN"] = TYPE_EXAMEN
 
     # Pagination
     page_number = request.GET.get("page", 1)
@@ -564,7 +621,7 @@ def propositions_list(request):
     propositions = Creneau_Horaire.objects.filter(
         status=STATUS_PROPOSED, 
         horaire__isnull=True
-    ).select_related("cours", "personnel", "fonction")
+    ).select_related("cours", "personnel")
     
     context = {
         "propositions": propositions,

@@ -351,7 +351,15 @@ class Creneau_Horaire(models.Model):
         null=True, blank=True,
         help_text="Date précise pour un examen (ex: 15/06/2026). Laisser vide pour un cours hebdomadaire.",
     )
-    heure = models.TimeField()
+    heure = models.CharField(
+        max_length=10,
+        choices=[
+            ("08:00:00", "08:00"),
+            ("11:40:00", "11:40"),
+        ],
+        default="08:00:00",
+        help_text="Heure du créneau (08:00 ou 11h40)",
+    )
     jours = models.CharField(
         max_length=20, 
         choices=JOURS_CHOICES,
@@ -365,9 +373,6 @@ class Creneau_Horaire(models.Model):
     )
     cours = models.ForeignKey(
         Cours, on_delete=models.CASCADE, related_name="horaires"
-    )
-    fonction = models.ForeignKey(
-        Fonction, on_delete=models.SET_NULL, null=True, related_name="occupations"
     )
     personnel = models.ForeignKey(
         Personnel, on_delete=models.CASCADE, related_name="dispense_cours"

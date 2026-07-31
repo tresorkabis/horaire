@@ -2,21 +2,144 @@
 {% block title %}Gestion des horaires · ESFORCA{% endblock %}
 {% block page_name %}Gestion des horaires{% endblock %}
 {% block content %}
-<div class="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><h1 class="font-display text-3xl font-extrabold text-slate-950">Gestion des horaires</h1><p class="mt-2 text-sm text-slate-500">Consultez et pilotez chaque étape de la planification académique.</p></div>{% if is_chef %}<a href="{% url 'create_schedule' %}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200"><i class="fa-solid fa-plus"></i>Nouvel horaire</a>{% endif %}</div>
- <div class="mb-5 flex flex-wrap gap-2"><a href="{% url 'schedule_list' %}" class="rounded-xl px-4 py-2 text-xs font-bold {% if not active_status %}bg-brand-600 text-white shadow-lg shadow-blue-100{% else %}border border-slate-200 bg-white text-slate-500{% endif %}">Tous</a>{% for value,label in view.model.STATUS_CHOICES %}{% endfor %}<a href="?status=DRAFT" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-500">Brouillons</a><a href="?status=PROPOSED" class="rounded-xl border border-amber-100 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-700">Proposés</a><a href="?status=CONFIRMED" class="rounded-xl border border-blue-100 bg-blue-50 px-4 py-2 text-xs font-bold text-blue-700">Confirmés</a><a href="?status=PUBLISHED" class="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700">Publiés</a></div>
-<div class="mb-5">
-    <label for="promotion-filter" class="block text-sm font-medium text-slate-600 mb-2">Filtrer par promotion</label>
-    <select id="promotion-filter" name="promotion" class="w-full max-w-sm rounded-xl border border-slate-200 px-4 py-2 text-sm outline-none focus:border-brand-500" onchange="this.form.submit()">
+<div class="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+  <div>
+    <h1 class="font-display text-3xl font-extrabold text-slate-950">Gestion des horaires</h1>
+    <p class="mt-2 text-sm text-slate-500">Consultez et pilotez chaque étape de la planification académique.</p>
+  </div>
+  {% if is_chef %}
+  <a href="{% url 'create_schedule' %}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200"><i class="fa-solid fa-plus"></i>Nouvel horaire</a>
+  {% endif %}
+</div>
+
+<!-- Filtres par type -->
+<div class="mb-5 flex flex-wrap items-center gap-2">
+  <a href="{% url 'schedule_list' %}" class="rounded-xl px-4 py-2 text-xs font-bold {% if not type_filtre %}bg-brand-600 text-white shadow-lg{% else %}border border-slate-200 bg-white text-slate-500{% endif %}">Tous types</a>
+  <a href="?type_horaire={{ TYPE_COURS }}" class="rounded-xl px-4 py-2 text-xs font-bold {% if type_filtre == TYPE_COURS %}bg-brand-600 text-white shadow-lg{% else %}border border-slate-200 bg-white text-slate-500{% endif %}"><i class="fa-solid fa-book-open mr-1"></i>Cours</a>
+  <a href="?type_horaire={{ TYPE_EXAMEN }}" class="rounded-xl px-4 py-2 text-xs font-bold {% if type_filtre == TYPE_EXAMEN %}bg-brand-600 text-white shadow-lg{% else %}border border-slate-200 bg-white text-slate-500{% endif %}"><i class="fa-solid fa-pen-to-square mr-1"></i>Examens</a>
+  <span class="mx-2 text-slate-200">|</span>
+  <a href="{% url 'schedule_list' %}" class="rounded-xl px-4 py-2 text-xs font-bold {% if not active_status %}bg-navy text-white shadow-lg{% else %}border border-slate-200 bg-white text-slate-500{% endif %}">Tous statuts</a>
+  <a href="?status=PROPOSED" class="rounded-xl border border-amber-100 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-700">Proposés</a>
+  <a href="?status=CONFIRMED" class="rounded-xl border border-blue-100 bg-blue-50 px-4 py-2 text-xs font-bold text-blue-700">Confirmés</a>
+  <a href="?status=PUBLISHED" class="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700">Publiés</a>
+</div>
+
+<!-- Filtre par promotion + Recherche -->
+<section class="mb-5 overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card">
+  <form method="get" class="flex flex-col gap-3 p-5 sm:flex-row sm:items-end">
+    <div class="flex-1">
+      <label for="promotion-filter" class="block text-xs font-bold text-slate-500 mb-2">Filtrer par promotion</label>
+      <select id="promotion-filter" name="promotion" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-500">
         <option value="">Toutes les promotions</option>
         {% for promotion in promotions %}
         <option value="{{ promotion.id_prom }}" {% if active_promotion == promotion.id_prom|stringformat:"s" %}selected{% endif %}>
-            {{ promotion.filiere.nom_filiere }} - {{ promotion.designation }} ({{ promotion.annee_academique }})
+          {{ promotion.filiere.nom_filiere }} - {{ promotion.designation }} ({{ promotion.annee_academique }})
         </option>
         {% endfor %}
-    </select>
-</div>
-<section class="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-card">
- <div class="border-b border-slate-100 p-5"><form method="get" class="flex flex-col gap-3 sm:flex-row"><div class="relative flex-1"><i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i><input name="q" value="{{ search }}" class="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 text-sm outline-none focus:border-brand-500" placeholder="Rechercher un cours ou un enseignant…"></div>{% if active_status %}<input type="hidden" name="status" value="{{ active_status }}">{% endif %}{% if active_promotion %}<input type="hidden" name="promotion" value="{{ active_promotion }}">{% endif %}<button class="rounded-xl bg-navy px-5 py-3 text-sm font-bold text-white">Rechercher</button></form></div>
-     {% if horaires %}<div class="overflow-x-auto"><table class="w-full min-w-[980px] text-left"><thead class="bg-slate-50 text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-400"><tr><th class="px-6 py-4">Cours</th><th class="px-6 py-4">Personnel</th><th class="px-6 py-4">Fonction</th><th class="px-6 py-4">Quand</th><th class="px-6 py-4">Heure</th><th class="px-6 py-4">Statut</th><th class="px-6 py-4 text-right">Actions</th></tr></thead><tbody class="divide-y divide-slate-100">{% for h in horaires %}<tr class="hover:bg-brand-50/30"><td class="px-6 py-4"><div class="flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-600"><i class="fa-solid fa-book"></i></span><div><p class="text-sm font-bold">{{ h.cours.titre }}</p><p class="text-xs text-slate-400">#CH-{{ h.id_chrono|stringformat:'04d' }} · {{ h.cours.duree }} min</p></div></div></td><td class="px-6 py-4"><p class="text-sm font-semibold">{{ h.personnel.nom }} {{ h.personnel.post_nom }}</p><p class="text-xs text-slate-400">{{ h.personnel.grade }}</p></td><td class="px-6 py-4 text-sm text-slate-500">{{ h.fonction.intitule|default:'—' }}</td><td class="px-6 py-4">{% if h.date %}<span class="rounded-md bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700">{{ h.date|date:"d/m/Y" }}</span>{% else %}<span class="text-sm font-semibold">{{ h.jours }}</span>{% endif %}</td><td class="px-6 py-4 text-sm font-semibold">{{ h.heure|time:'H:i' }}</td><td class="px-6 py-4">{% include 'core/partials/status_badge.html' with status=h.status %}</td><td class="px-6 py-4"><div class="flex justify-end gap-2">{% if is_chef and h.status == 'DRAFT' or is_chef and h.status == 'PROPOSED' %}<a href="{% url 'edit_schedule' h.pk %}" class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-brand-600"><i class="fa-solid fa-pen mr-1"></i>Modifier</a>{% endif %}{% if is_sga and h.status == 'PROPOSED' %}<form method="post" action="{% url 'confirm_schedule' h.pk %}">{% csrf_token %}<button class="rounded-lg border border-emerald-200 px-3 py-2 text-xs font-bold text-emerald-700"><i class="fa-solid fa-check mr-1"></i>Confirmer</button></form>{% endif %}{% if is_chef and h.status == 'CONFIRMED' %}<form method="post" action="{% url 'publish_schedule' h.pk %}">{% csrf_token %}<button class="rounded-lg bg-brand-600 px-3 py-2 text-xs font-bold text-white"><i class="fa-solid fa-paper-plane mr-1"></i>Publier</button></form>{% endif %}</div></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="py-20 text-center"><i class="fa-regular fa-calendar-xmark text-5xl text-slate-200"></i><h3 class="mt-4 font-display text-xl font-extrabold">Aucun résultat</h3><p class="mt-1 text-sm text-slate-400">Modifiez vos critères de recherche.</p></div>{% endif %}
+      </select>
+    </div>
+    <div class="relative flex-1">
+      <label class="block text-xs font-bold text-slate-500 mb-2">Recherche</label>
+      <i class="fa-solid fa-magnifying-glass absolute left-4 top-[2.85rem] text-slate-300"></i>
+      <input name="q" value="{{ search }}" class="w-full rounded-xl border border-slate-200 py-2.5 pl-11 pr-4 text-sm outline-none focus:border-brand-500" placeholder="Cours ou enseignant…">
+    </div>
+    {% if active_status %}<input type="hidden" name="status" value="{{ active_status }}">{% endif %}
+    {% if type_filtre %}<input type="hidden" name="type_horaire" value="{{ type_filtre }}">{% endif %}
+    <button class="rounded-xl bg-navy px-5 py-2.5 text-sm font-bold text-white">Filtrer</button>
+  </form>
 </section>
+
+<!-- Tableau -->
+<section class="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-card">
+  {% if horaires %}
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[760px] text-left text-sm">
+      <thead class="bg-slate-50 text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-400">
+        <tr>
+          <th class="px-5 py-4">Cours</th>
+          <th class="px-5 py-4">Enseignant</th>
+          <th class="px-5 py-4">Planification</th>
+          <th class="px-5 py-4">Promotion</th>
+          <th class="px-5 py-4">Statut</th>
+          <th class="px-5 py-4 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for h in horaires %}
+        <tr class="hover:bg-brand-50/30">
+          <!-- Cours -->
+          <td class="px-5 py-4">
+            <div class="flex items-center gap-3">
+              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg {% if h.type_horaire == 'EXAMEN' %}bg-amber-50 text-amber-600{% else %}bg-violet-50 text-violet-600{% endif %}"><i class="fa-solid {% if h.type_horaire == 'EXAMEN' %}fa-pen-to-square{% else %}fa-book{% endif %}"></i></span>
+              <div class="min-w-0">
+                <p class="text-sm font-bold text-slate-800">{{ h.cours.titre }}</p>
+                <p class="text-xs text-slate-400">#CH-{{ h.id_chrono|stringformat:'04d' }} · {{ h.cours.duree }} min</p>
+              </div>
+            </div>
+          </td>
+          <!-- Enseignant -->
+          <td class="px-5 py-4">
+            <p class="text-sm font-semibold text-slate-700">{{ h.personnel.nom }} {{ h.personnel.post_nom }}</p>
+            <p class="text-xs text-slate-400">{{ h.personnel.grade|default:"—" }}</p>
+          </td>
+          <!-- Planification (date + heure combinées) -->
+          <td class="px-5 py-4">
+            {% if h.date %}
+            <p class="text-sm font-semibold text-slate-700">{{ h.date|date:"d/m/Y" }}</p>
+            {% else %}
+            <p class="text-sm font-semibold text-slate-700">{{ h.jours }}</p>
+            {% endif %}
+            <p class="text-xs text-slate-400">{{ h.heure|time:"H:i" }}</p>
+          </td>
+          <!-- Promotion -->
+          <td class="px-5 py-4">
+            {% if h.horaire %}
+            <p class="text-sm font-semibold text-slate-700">{{ h.horaire.promotion.designation }}</p>
+            <p class="text-xs text-slate-400">{{ h.horaire.promotion.filiere.nom_filiere }}</p>
+            {% else %}
+            <span class="text-xs italic text-slate-400">Non assigné</span>
+            {% endif %}
+          </td>
+          <!-- Statut -->
+          <td class="px-5 py-4">{% include 'core/partials/status_badge.html' with status=h.status %}</td>
+          <!-- Actions -->
+          <td class="px-5 py-4">
+            <div class="flex justify-end gap-2">
+              {% if is_chef and h.status == 'DRAFT' or is_chef and h.status == 'PROPOSED' %}
+              <a href="{% url 'edit_schedule' h.pk %}" class="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 text-slate-500 hover:border-brand-200 hover:text-brand-600" title="Modifier"><i class="fa-solid fa-pen text-xs"></i></a>
+              {% endif %}
+              {% if is_sga and h.status == 'PROPOSED' %}
+              <form method="post" action="{% url 'confirm_schedule' h.pk %}">{% csrf_token %}<button title="Confirmer" class="grid h-8 w-8 place-items-center rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100"><i class="fa-solid fa-check text-xs"></i></button></form>
+              {% endif %}
+              {% if is_chef and h.status == 'CONFIRMED' %}
+              <form method="post" action="{% url 'publish_schedule' h.pk %}">{% csrf_token %}<button title="Publier" class="grid h-8 w-8 place-items-center rounded-lg bg-brand-50 text-brand-700 hover:bg-brand-100"><i class="fa-solid fa-paper-plane text-xs"></i></button></form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="py-20 text-center">
+    <i class="fa-regular fa-calendar-xmark text-5xl text-slate-200"></i>
+    <h3 class="mt-4 font-display text-xl font-extrabold">Aucun résultat</h3>
+    <p class="mt-1 text-sm text-slate-400">Modifiez vos critères de recherche.</p>
+  </div>
+  {% endif %}
+</section>
+
+<!-- Pagination -->
+{% if horaires.has_other_pages %}
+<div class="mt-6 flex items-center justify-center gap-2">
+  {% if horaires.has_previous %}
+  <a href="?page={{ horaires.previous_page_number }}{% if search %}&q={{ search }}{% endif %}{% if active_status %}&status={{ active_status }}{% endif %}{% if type_filtre %}&type_horaire={{ type_filtre }}{% endif %}{% if active_promotion %}&promotion={{ active_promotion }}{% endif %}" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50"><i class="fa-solid fa-chevron-left"></i></a>
+  {% endif %}
+  <span class="text-sm text-slate-400">Page {{ horaires.number }} sur {{ horaires.paginator.num_pages }}</span>
+  {% if horaires.has_next %}
+  <a href="?page={{ horaires.next_page_number }}{% if search %}&q={{ search }}{% endif %}{% if active_status %}&status={{ active_status }}{% endif %}{% if type_filtre %}&type_horaire={{ type_filtre }}{% endif %}{% if active_promotion %}&promotion={{ active_promotion }}{% endif %}" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50"><i class="fa-solid fa-chevron-right"></i></a>
+  {% endif %}
+</div>
+{% endif %}
 {% endblock %}

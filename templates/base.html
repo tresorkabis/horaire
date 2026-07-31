@@ -45,7 +45,7 @@
     </div>
     <nav class="flex-1 space-y-1.5 overflow-y-auto px-4 py-7 text-sm">
       <p class="mb-3 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-blue-200/50">Espace académique</p>
-      <a href="{% url 'dashboard' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if request.resolver_match.url_name == 'dashboard' %}bg-blue-500 text-white shadow-lg shadow-blue-950/30{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-grid-2 w-5"></i>Tableau de bord</a>
+      <a href="{% url 'dashboard' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if request.resolver_match.url_name == 'dashboard' %}bg-blue-500 text-white shadow-lg shadow-blue-950/30{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-table-cells w-5"></i>Tableau de bord</a>
       <a href="{% url 'schedule_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if 'schedule' in request.resolver_match.url_name %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-regular fa-calendar-days w-5"></i>Créneaux</a>
       
       {% if is_chef or 'Chef de Filière' in user_roles %}

@@ -117,10 +117,10 @@ class HoraireAdmin(admin.ModelAdmin):
 
 @admin.register(Creneau_Horaire)
 class CreneauHoraireAdmin(admin.ModelAdmin):
-    list_display = ("id_chrono", "type_horaire", "affiche_quand", "heure", "cours", "personnel", "fonction", "status")
-    list_filter = ("type_horaire", "status", "fonction", "cours")
+    list_display = ("id_chrono", "type_horaire", "affiche_quand", "heure", "cours", "personnel", "status")
+    list_filter = ("type_horaire", "status", "cours")
     search_fields = ("cours__titre", "personnel__nom", "personnel__post_nom")
-    autocomplete_fields = ("cours", "personnel", "fonction")
+    autocomplete_fields = ("cours", "personnel")
     ordering = ("-date", "jours", "heure")
 
     def affiche_quand(self, obj):

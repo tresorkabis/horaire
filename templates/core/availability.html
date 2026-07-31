@@ -1,75 +1,150 @@
 {% extends 'base.html' %}
 
 {% block title %}Mes disponibilités · Horaires ESFORCA{% endblock %}
+{% block page_name %}Mes disponibilités{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="mb-8 flex justify-between items-end">
-        <div>
-            <a href="{% url 'dashboard' %}" class="text-slate-400 hover:text-indigo-600 mb-4 inline-block">
-                <i class="fas fa-arrow-left mr-2"></i> Retour au Dashboard
-            </a>
-            <h1 class="text-3xl font-bold text-slate-900">Soumettre mes Disponibilités</h1>
-            <p class="text-slate-500 mt-1">Indiquez vos créneaux libres pour faciliter la planification.</p>
-        </div>
-        <button onclick="addRow()" class="px-4 py-2 bg-indigo-50 text-indigo-600 font-bold rounded-lg hover:bg-indigo-100 transition-all">
-            <i class="fas fa-plus mr-2"></i> Ajouter un créneau
-        </button>
+<div class="max-w-5xl mx-auto">
+  <div class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div>
+      <a href="{% url 'dashboard' %}" class="mb-3 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-brand-600">
+        <i class="fa-solid fa-arrow-left"></i> Retour au tableau de bord
+      </a>
+      <h1 class="font-display text-3xl font-extrabold text-slate-950">Mes disponibilités</h1>
+      <p class="mt-1 text-sm text-slate-500">Indiquez vos créneaux libres pour faciliter la planification.</p>
     </div>
+    <button onclick="addRow()" class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-brand-700">
+      <i class="fa-solid fa-plus"></i> Ajouter un créneau
+    </button>
+  </div>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <form method="POST">
-            {% csrf_token %}
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="bg-slate-50 text-slate-400 text-xs font-bold uppercase tracking-wider">
-                        <th class="py-4 px-6">Jour</th>
-                        <th class="py-4 px-6">Heure Début</th>
-                        <th class="py-4 px-6">Heure Fin</th>
-                        <th class="py-4 px-6">Note (Optionnel)</th>
-                        <th class="py-4 px-6"></th>
-                    </tr>
-                </thead>
-                <tbody id="availability-body" class="divide-y divide-slate-100">
-                    <tr>
-                        <td class="py-4 px-6">
-                            <select name="jour[]" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none">
-                                <option>Lundi</option><option>Mardi</option><option>Mercredi</option>
-                                <option>Jeudi</option><option>Vendredi</option><option>Samedi</option>
-                            </select>
-                        </td>
-                        <td class="py-4 px-6">
-                            <input type="time" name="debut[]" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none">
-                        </td>
-                        <td class="py-4 px-6">
-                            <input type="time" name="fin[]" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none">
-                        </td>
-                        <td class="py-4 px-6">
-                            <input type="text" name="note[]" placeholder="Ex: Sauf imprévu" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none">
-                        </td>
-                        <td class="py-4 px-6 text-right text-red-400 cursor-pointer hover:text-red-600">
-                            <i class="fas fa-trash"></i>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end">
-                <button type="submit" class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all">
-                    Enregistrer mes disponibilités
+  <!-- Disponibilités existantes -->
+  {% if disponibilites %}
+  <section class="mb-8 overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-card">
+    <header class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+      <div>
+        <h2 class="font-display text-lg font-extrabold text-slate-950">Disponibilités enregistrées</h2>
+        <p class="mt-1 text-xs text-slate-400">{{ disponibilites|length }} créneau(x) déclaré(s)</p>
+      </div>
+      <span class="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-600"><i class="fa-regular fa-circle-check"></i></span>
+    </header>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[600px] text-left text-sm">
+        <thead class="bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <tr>
+            <th class="px-6 py-4">Jour</th>
+            <th class="px-6 py-4">Heure début</th>
+            <th class="px-6 py-4">Heure fin</th>
+            <th class="px-6 py-4">Note</th>
+            <th class="px-6 py-4 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for d in disponibilites %}
+          <tr class="group transition hover:bg-brand-50/30">
+            <td class="px-6 py-4">
+              <span class="rounded-md bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700">{{ d.jour }}</span>
+            </td>
+            <td class="px-6 py-4 text-sm font-semibold text-slate-700">{{ d.heure_debut|time:"H:i" }}</td>
+            <td class="px-6 py-4 text-sm font-semibold text-slate-700">{{ d.heure_fin|time:"H:i" }}</td>
+            <td class="px-6 py-4 text-xs text-slate-400">{{ d.note|default:"—" }}</td>
+            <td class="px-6 py-4 text-right">
+              <form method="post" action="{% url 'delete_availability' d.pk %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" title="Supprimer" class="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-600 hover:bg-red-100" onclick="return confirm('Supprimer cette disponibilité ?')">
+                  <i class="fa-solid fa-trash text-xs"></i>
                 </button>
-            </div>
-        </form>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
+  </section>
+  {% endif %}
+
+  <!-- Formulaire d'ajout -->
+  <section class="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-card">
+    <header class="border-b border-slate-100 px-6 py-5">
+      <h2 class="font-display text-lg font-extrabold text-slate-950">Ajouter de nouveaux créneaux</h2>
+      <p class="mt-1 text-xs text-slate-400">Renseignez vos disponibilités hebdomadaires</p>
+    </header>
+    <form method="POST">
+      {% csrf_token %}
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[600px] text-left text-sm">
+          <thead class="bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <tr>
+              <th class="px-6 py-4">Jour</th>
+              <th class="px-6 py-4">Heure Début</th>
+              <th class="px-6 py-4">Heure Fin</th>
+              <th class="px-6 py-4">Note (Optionnel)</th>
+              <th class="px-6 py-4"></th>
+            </tr>
+          </thead>
+          <tbody id="availability-body" class="divide-y divide-slate-100">
+            <tr>
+              <td class="px-6 py-4">
+                <select name="jour[]" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500">
+                  <option value="Lundi">Lundi</option>
+                  <option value="Mardi">Mardi</option>
+                  <option value="Mercredi">Mercredi</option>
+                  <option value="Jeudi">Jeudi</option>
+                  <option value="Vendredi">Vendredi</option>
+                  <option value="Samedi">Samedi</option>
+                </select>
+              </td>
+              <td class="px-6 py-4">
+                <input type="time" name="debut[]" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500">
+              </td>
+              <td class="px-6 py-4">
+                <input type="time" name="fin[]" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500">
+              </td>
+              <td class="px-6 py-4">
+                <input type="text" name="note[]" placeholder="Ex: Sauf imprévu" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500">
+              </td>
+              <td class="px-6 py-4 text-right">
+                <button type="button" onclick="removeRow(this)" class="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-600 hover:bg-red-100">
+                  <i class="fa-solid fa-trash text-xs"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="flex justify-end border-t border-slate-100 bg-slate-50/80 p-6">
+        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-brand-700">
+          <i class="fa-solid fa-paper-plane"></i> Enregistrer mes disponibilités
+        </button>
+      </div>
+    </form>
+  </section>
+
+  {% if not disponibilites %}
+  <div class="mt-6 rounded-2xl border border-amber-100 bg-amber-50 p-5 text-sm text-amber-700">
+    <i class="fa-solid fa-circle-info mr-2"></i>
+    Vous n'avez pas encore déclaré de disponibilités. Le secrétariat en a besoin pour planifier vos cours.
+  </div>
+  {% endif %}
 </div>
 
 <script>
-    function addRow() {
-        const body = document.getElementById('availability-body');
-        const newRow = body.rows[0].cloneNode(true);
-        // Clear inputs in cloned row
-        const inputs = newRow.querySelectorAll('input');
-        inputs.forEach(input => input.value = '');
-        body.appendChild(newRow);
+  function addRow() {
+    const body = document.getElementById('availability-body');
+    const newRow = body.rows[0].cloneNode(true);
+    const inputs = newRow.querySelectorAll('input');
+    inputs.forEach(input => input.value = '');
+    const selects = newRow.querySelectorAll('select');
+    selects.forEach(select => select.selectedIndex = 0);
+    body.appendChild(newRow);
+  }
+
+  function removeRow(button) {
+    const body = document.getElementById('availability-body');
+    if (body.rows.length > 1) {
+      button.closest('tr').remove();
     }
+  }
 </script>
 {% endblock %}
