@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Mes cours · Horaires ESFORCA{% endblock %}
+{% block page_name %}Mes cours{% endblock %}
+{% block content %}
+<div class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+  <div>
+    <a href="{% url 'dashboard' %}" class="mb-3 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-brand-600">
+      <i class="fa-solid fa-arrow-left"></i> Retour au tableau de bord
+    </a>
+    <h1 class="font-display text-3xl font-extrabold text-slate-950">Mes cours</h1>
+    <p class="mt-1 text-sm text-slate-500">Les matières que vous dispensez cette année académique.</p>
+  </div>
+</div>
+
+<section class="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-card">
+  <header class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+    <div>
+      <h2 class="font-display text-lg font-extrabold text-slate-950">Cours assignés</h2>
+      <p class="mt-1 text-xs text-slate-400">{{ cours|length }} cours</p>
+    </div>
+    <span class="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-600"><i class="fa-solid fa-book-open"></i></span>
+  </header>
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[600px] text-left text-sm">
+      <thead class="bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        <tr>
+          <th class="px-6 py-4">Cours</th>
+          <th class="px-6 py-4">Durée</th>
+          <th class="px-6 py-4 text-right">Créneaux</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for c in cours %}
+        <tr class="group transition hover:bg-brand-50/30">
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <span class="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-600"><i class="fa-solid fa-book-open"></i></span>
+              <div>
+                <p class="text-sm font-bold text-slate-800">{{ c.titre }}</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-sm font-semibold text-slate-700">{{ c.duree }} min</td>
+          <td class="px-6 py-4 text-right">
+            <a href="{% url 'schedule_list' %}?cours={{ c.id_cours }}" class="inline-flex items-center gap-2 rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 transition hover:bg-brand-100">
+              <i class="fa-regular fa-calendar"></i> Voir les créneaux
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="3" class="px-6 py-12 text-center text-slate-400 text-sm">Aucun cours assigné pour le moment.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

@@ -404,6 +404,34 @@ def submit_availability(request):
 
 
 @role_required(ROLE_ENSEIGNANT)
+def delete_availability(request, pk):
+    """Suppression d'une disponibilité d'un enseignant."""
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    if not hasattr(request.user, "personnel"):
+        messages.error(request, "Aucun profil personnel associé.")
+        return redirect("dashboard")
+    disponibilite = get_object_or_404(
+        Disponibilite, pk=pk, enseignant=request.user.personnel
+    )
+    disponibilite.delete()
+    messages.success(request, "Disponibilité supprimée.")
+    return redirect("submit_availability")
+
+
+@role_required(ROLE_ENSEIGNANT)
+def teacher_courses(request):
+    """Liste des cours (Cours) assignés à l'enseignant connecté, déduits des créneaux."""
+    if not hasattr(request.user, "personnel"):
+        messages.error(request, "Aucun profil personnel associé.")
+        return redirect("dashboard")
+    cours = Cours.objects.filter(
+        horaires__personnel=request.user.personnel
+    ).distinct().order_by("titre")
+    return render(request, "core/teacher_courses.html", {"cours": cours})
+
+
+@role_required(ROLE_ENSEIGNANT)
 def annotate_schedule(request, pk):
     """Ajout d'une annotation à un horaire (Enseignant)."""
     if request.method != "POST":
