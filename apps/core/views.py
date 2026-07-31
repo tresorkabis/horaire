@@ -313,10 +313,30 @@ def edit_schedule(request, pk=None):
     from .models import Horaire
     horaires_dispos = Horaire.objects.all()
     
+    # Disponibilités des enseignants pour le lien visuel dans le formulaire
+    import json
+    from collections import defaultdict
+    
+    disponibilites_qs = Disponibilite.objects.select_related("enseignant").order_by(
+        "enseignant", "jour", "heure_debut"
+    )
+    
+    # Structurer les données par enseignant → jour → liste de créneaux
+    dispo_data = defaultdict(lambda: defaultdict(list))
+    for d in disponibilites_qs:
+        teacher_id = str(d.enseignant_id)
+        dispo_data[teacher_id][d.jour].append({
+            "debut": d.heure_debut.strftime("%H:%M"),
+            "fin": d.heure_fin.strftime("%H:%M"),
+            "note": d.note or "",
+        })
+    disponibilites_json = json.dumps(dispo_data)
+    
     return render(request, "core/edit_schedule.html", {
         "creneau": creneau, 
         "form": form, 
-        "horaires": horaires_dispos
+        "horaires": horaires_dispos,
+        "disponibilites_json": disponibilites_json,
     })
 
 

@@ -1,80 +1,103 @@
 {% extends 'base.html' %}
-
-{% block title %}Élaboration d’un horaire · ESFORCA{% endblock %}
-
+{% load static %}
+{% block title %}Élaboration d'un horaire · ESFORCA{% endblock %}
 {% block content %}
-<div class="max-w-2xl mx-auto">
+<div class="max-w-3xl mx-auto">
     <div class="mb-8">
         <a href="{% url 'dashboard' %}" class="text-slate-400 hover:text-indigo-600 mb-4 inline-block">
             <i class="fas fa-arrow-left mr-2"></i> Retour au Dashboard
         </a>
-        <h1 class="text-3xl font-bold text-slate-900">{% if horaire %}Modifier{% else %}Élaborer{% endif %} un Horaire</h1>
+        <h1 class="text-3xl font-bold text-slate-900">{% if creneau %}Modifier{% else %}Élaborer{% endif %} un Horaire</h1>
         <p class="text-slate-500 mt-1">Définissez les paramètres de la séance de cours.</p>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-        <form method="POST" class="space-y-6">
-            {% csrf_token %}
-            {% if form.non_field_errors %}<div class="p-4 rounded-xl bg-red-50 text-red-700">{{ form.non_field_errors }}</div>{% endif %}
-            
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Type de créneau</label>
-                {{ form.type_horaire }} {{ form.type_horaire.errors }}
-                <p class="mt-1 text-xs text-slate-400">Cours = jour hebdomadaire · Examen = date précise</p>
-            </div>
-
-            <div id="cours-fields" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <!-- Formulaire -->
+        <div class="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+                {% if form.non_field_errors %}<div class="p-4 rounded-xl bg-red-50 text-red-700">{{ form.non_field_errors }}</div>{% endif %}
+                
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Jour de la semaine</label>
-                    {{ form.jours }} {{ form.jours.errors }}
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Type de créneau</label>
+                    {{ form.type_horaire }} {{ form.type_horaire.errors }}
+                    <p class="mt-1 text-xs text-slate-400">Cours = jour hebdomadaire · Examen = date précise</p>
                 </div>
+
+                <div id="cours-fields" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Jour de la semaine</label>
+                        {{ form.jours }} {{ form.jours.errors }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Heure de début</label>
+                        {{ form.heure }} {{ form.heure.errors }}
+                    </div>
+                </div>
+
+                <div id="examen-fields" class="grid grid-cols-1 md:grid-cols-2 gap-6" style="display:none;">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Date de l'examen</label>
+                        {{ form.date }} {{ form.date.errors }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Heure de début</label>
+                        {{ form.heure }} {{ form.heure.errors }}
+                    </div>
+                </div>
+
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Heure de début</label>
-                    {{ form.heure }} {{ form.heure.errors }}
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Cours</label>
+                    {{ form.cours }} {{ form.cours.errors }}
                 </div>
-            </div>
 
-            <div id="examen-fields" class="grid grid-cols-1 md:grid-cols-2 gap-6" style="display:none;">
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Date de l'examen</label>
-                    {{ form.date }} {{ form.date.errors }}
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Enseignant Responsable</label>
+                    {{ form.personnel }} {{ form.personnel.errors }}
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Heure de début</label>
-                    {{ form.heure }} {{ form.heure.errors }}
+
+                <div class="pt-6 border-t border-slate-100 flex justify-end space-x-4">
+                    <button type="submit" name="status" value="DRAFT" class="px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-all">
+                        Enregistrer Brouillon
+                    </button>
+                    <button type="submit" name="status" value="PROPOSED" class="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all">
+                        Proposer au SGA
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Disponibilités de l'enseignant -->
+        <div class="lg:col-span-2">
+            <div id="disponibilites-panel" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6" style="display:none;">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-600"><i class="fa-regular fa-clock"></i></span>
+                    <div>
+                        <h3 class="font-display text-base font-extrabold text-slate-900">Disponibilités</h3>
+                        <p id="dispo-teacher-name" class="text-xs text-slate-400">Enseignant sélectionné</p>
+                    </div>
+                </div>
+                <div id="disponibilites-list" class="space-y-2">
+                    <p class="text-sm text-slate-400 italic">Sélectionnez un enseignant et un jour pour voir ses disponibilités.</p>
                 </div>
             </div>
-
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Cours</label>
-                {{ form.cours }} {{ form.cours.errors }}
-            </div>
-
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Enseignant Responsable</label>
-                {{ form.personnel }} {{ form.personnel.errors }}
-            </div>
-
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Type de Séance (Fonction)</label>
-            </div>
-
-            <div class="pt-6 border-t border-slate-100 flex justify-end space-x-4">
-                <button type="submit" name="status" value="DRAFT" class="px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-all">
-                    Enregistrer Brouillon
-                </button>
-                <button type="submit" name="status" value="PROPOSED" class="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all">
-                    Proposer au SGA
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
+</div>
 
 <script>
+// Données des disponibilités (sérialisées en JSON)
+const disponibilitesData = {{ disponibilites_json|safe }};
+
 document.addEventListener('DOMContentLoaded', function() {
     const typeSelect = document.querySelector('[name="type_horaire"]');
     const coursFields = document.getElementById('cours-fields');
     const examenFields = document.getElementById('examen-fields');
+    const personnelSelect = document.querySelector('[name="personnel"]');
+    const joursSelect = document.querySelector('[name="jours"]');
+    const panel = document.getElementById('disponibilites-panel');
+    const list = document.getElementById('disponibilites-list');
+    const teacherName = document.getElementById('dispo-teacher-name');
 
     function toggleFields() {
         if (typeSelect.value === 'EXAMEN') {
@@ -86,9 +109,46 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function updateDisponibilites() {
+        const teacherId = personnelSelect.value;
+        const jour = joursSelect.value;
+
+        if (!teacherId || !jour || !disponibilitesData[teacherId]) {
+            panel.style.display = 'none';
+            return;
+        }
+
+        const teacherNameText = personnelSelect.options[personnelSelect.selectedIndex]?.text || 'Enseignant';
+        teacherName.textContent = teacherNameText;
+
+        const dispoPourJour = disponibilitesData[teacherId][jour] || [];
+        
+        if (dispoPourJour.length === 0) {
+            list.innerHTML = `
+                <div class="rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-700">
+                    <i class="fa-solid fa-circle-info mr-2"></i>Aucune disponibilité déclarée pour le <strong>${jour}</strong>.
+                </div>
+            `;
+        } else {
+            list.innerHTML = dispoPourJour.map(d => `
+                <div class="rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-emerald-800">${d.debut} → ${d.fin}</span>
+                        ${d.note ? `<span class="text-xs text-emerald-600 italic">${d.note}</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        panel.style.display = 'block';
+    }
+
     typeSelect.addEventListener('change', toggleFields);
+    personnelSelect.addEventListener('change', updateDisponibilites);
+    joursSelect.addEventListener('change', updateDisponibilites);
+    
     toggleFields();
+    updateDisponibilites();
 });
 </script>
-</div>
 {% endblock %}
