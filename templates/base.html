@@ -59,9 +59,9 @@
 
       {% if is_enseignant or 'Enseignant' in user_roles %}
       <div class="my-4 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-blue-200/50">Enseignant</div>
-      <a href="{% url 'teacher_courses' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold text-blue-100/75 transition hover:bg-white/10 hover:text-white"><i class="fa-solid fa-book-open w-5"></i>Mes cours</a>
-      <a href="{% url 'schedule_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold text-blue-100/75 transition hover:bg-white/10 hover:text-white"><i class="fa-regular fa-calendar-days w-5"></i>Mes créneaux</a>
-      <a href="{% url 'submit_availability' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold text-blue-100/75 transition hover:bg-white/10 hover:text-white"><i class="fa-regular fa-clock w-5"></i>Mes disponibilités</a>
+      <a href="{% url 'teacher_courses' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if request.resolver_match.url_name == 'teacher_courses' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-book-open w-5"></i>Mes cours</a>
+      <a href="{% url 'schedule_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if 'schedule' in request.resolver_match.url_name %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-regular fa-calendar-days w-5"></i>Mes créneaux</a>
+      <a href="{% url 'submit_availability' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if request.resolver_match.url_name == 'submit_availability' or request.resolver_match.url_name == 'delete_availability' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-regular fa-clock w-5"></i>Mes disponibilités</a>
       {% endif %}
       {% if is_sga or 'SG-A' in user_roles %}<a href="{% url 'manage_personnel' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold {% if 'personnel' in request.resolver_match.url_name %}bg-blue-500 text-white{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-users w-5"></i>Gestion du personnel</a>{% endif %}
       <div class="my-5 border-t border-white/10"></div>
