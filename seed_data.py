@@ -25,8 +25,10 @@ def seed():
     rt, _ = Filiere.objects.get_or_create(nom_filiere="Réseaux et Techniques de Maintenance")
     sd, _ = Filiere.objects.get_or_create(nom_filiere="Secrétariat de Direction")
 
+    # 3 promotions pour Génie Logiciel : L1, L2, L3
     l1_gl, _ = Promotion.objects.get_or_create(designation="L1", annee_academique="2025-2026", filiere=gl)
     l2_gl, _ = Promotion.objects.get_or_create(designation="L2", annee_academique="2025-2026", filiere=gl)
+    l3_gl, _ = Promotion.objects.get_or_create(designation="L3", annee_academique="2025-2026", filiere=gl)
     l1_sc, _ = Promotion.objects.get_or_create(designation="L1", annee_academique="2025-2026", filiere=sc)
     l1_rt, _ = Promotion.objects.get_or_create(designation="L1", annee_academique="2025-2026", filiere=rt)
     l1_sd, _ = Promotion.objects.get_or_create(designation="L1", annee_academique="2025-2026", filiere=sd)
@@ -59,16 +61,42 @@ def seed():
     sga.save()
     etud = create_actor("etud", "LUMUMBA", "Patrice", "Étudiant", Etudiant, num_matric="S001", date_naiss=datetime.date(2003, 1, 1), promotion=l1_gl)
 
-    c1, _ = Cours.objects.get_or_create(titre="Algorithmique Avancée", defaults={'duree': 120})
-    c2, _ = Cours.objects.get_or_create(titre="Base de Données NoSQL", defaults={'duree': 90})
-    c3, _ = Cours.objects.get_or_create(titre="Architecture des Ordinateurs", defaults={'duree': 120})
-    c4, _ = Cours.objects.get_or_create(titre="Marketing Digital", defaults={'duree': 90})
-    c5, _ = Cours.objects.get_or_create(titre="Administration Réseau", defaults={'duree': 120})
-    c6, _ = Cours.objects.get_or_create(titre="Communication Professionnelle", defaults={'duree': 90})
+    # 6 cours pour Génie Logiciel (3 par semestre)
+    c1, _ = Cours.objects.get_or_create(titre="Algorithmique Avancée", defaults={'duree': 120, 'promotion': l1_gl})
+    c2, _ = Cours.objects.get_or_create(titre="Base de Données NoSQL", defaults={'duree': 90, 'promotion': l1_gl})
+    c3, _ = Cours.objects.get_or_create(titre="Architecture des Ordinateurs", defaults={'duree': 120, 'promotion': l2_gl})
+    c7, _ = Cours.objects.get_or_create(titre="Programmation Web Avancée", defaults={'duree': 120, 'promotion': l1_gl})
+    c8, _ = Cours.objects.get_or_create(titre="Intelligence Artificielle", defaults={'duree': 90, 'promotion': l2_gl})
+    c9, _ = Cours.objects.get_or_create(titre="Sécurité Informatique", defaults={'duree': 120, 'promotion': l3_gl})
+    # Cours pour autres filières
+    c4, _ = Cours.objects.get_or_create(titre="Marketing Digital", defaults={'duree': 90, 'promotion': l1_sc})
+    c5, _ = Cours.objects.get_or_create(titre="Administration Réseau", defaults={'duree': 120, 'promotion': l1_rt})
+    c6, _ = Cours.objects.get_or_create(titre="Communication Professionnelle", defaults={'duree': 90, 'promotion': l1_sd})
+
+    # Associer l'enseignant à chaque cours
+    c1.enseignant = chef
+    c1.save()
+    c2.enseignant = prof
+    c2.save()
+    c3.enseignant = prof
+    c3.save()
+    c7.enseignant = chef
+    c7.save()
+    c8.enseignant = prof
+    c8.save()
+    c9.enseignant = prof
+    c9.save()
+    c4.enseignant = prof
+    c4.save()
+    c5.enseignant = chef
+    c5.save()
+    c6.enseignant = prof
+    c6.save()
 
     h_draft, _ = Horaire.objects.get_or_create(promotion=l1_gl, titre="Semestre 1 - 2026", defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_COURS})
     h_proposed, _ = Horaire.objects.get_or_create(promotion=l1_gl, titre="Semestre 2 - 2026", defaults={'status': STATUS_PROPOSED, 'type_horaire': TYPE_COURS})
     h_confirmed, _ = Horaire.objects.get_or_create(promotion=l2_gl, titre="Semestre 1 - 2026", defaults={'status': STATUS_CONFIRMED, 'type_horaire': TYPE_COURS})
+    h_l3_s1, _ = Horaire.objects.get_or_create(promotion=l3_gl, titre="Semestre 1 - 2026", defaults={'status': STATUS_PUBLISHED, 'type_horaire': TYPE_COURS})
     h_published_gl, _ = Horaire.objects.get_or_create(promotion=l1_gl, titre="Année complète - 2026", defaults={'status': STATUS_PUBLISHED, 'type_horaire': TYPE_COURS})
     h_published_sc, _ = Horaire.objects.get_or_create(promotion=l1_sc, titre="Semestre 1 - 2026", defaults={'status': STATUS_PUBLISHED, 'type_horaire': TYPE_COURS})
     h_published_rt, _ = Horaire.objects.get_or_create(promotion=l1_rt, titre="Semestre 1 - 2026", defaults={'status': STATUS_PUBLISHED, 'type_horaire': TYPE_COURS})
@@ -87,14 +115,20 @@ def seed():
     Creneau_Horaire.objects.get_or_create(jours="Lundi", heure="11:40:00", cours=c4, personnel=prof, horaire=h_published_sc, status=STATUS_PUBLISHED)
     Creneau_Horaire.objects.get_or_create(jours="Mardi", heure="08:00:00", cours=c5, personnel=chef, horaire=h_published_rt, status=STATUS_PUBLISHED)
     Creneau_Horaire.objects.get_or_create(jours="Mercredi", heure="11:40:00", cours=c6, personnel=prof, horaire=h_published_sd, status=STATUS_PUBLISHED)
+    # Ajouter les nouveaux cours (3 par semestre)
+    Creneau_Horaire.objects.get_or_create(jours="Mercredi", heure="08:00:00", cours=c7, personnel=chef, horaire=h_draft, status=STATUS_DRAFT)
+    Creneau_Horaire.objects.get_or_create(jours="Vendredi", heure="11:40:00", cours=c8, personnel=prof, horaire=h_proposed, status=STATUS_PROPOSED)
+    Creneau_Horaire.objects.get_or_create(jours="Samedi", heure="08:00:00", cours=c9, personnel=prof, horaire=h_confirmed, status=STATUS_CONFIRMED)
+    Creneau_Horaire.objects.get_or_create(jours="Lundi", heure="11:40:00", cours=c7, personnel=chef, horaire=h_l3_s1, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(jours="Samedi", heure="11:40:00", cours=c8, personnel=prof, horaire=h_l3_s1, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(jours="Jeudi", heure="08:00:00", cours=c9, personnel=prof, horaire=h_l3_s1, status=STATUS_PUBLISHED)
 
     Creneau_Horaire.objects.get_or_create(jours="Mercredi", heure="11:40:00", cours=c1, personnel=chef, horaire=h_exam_gl, status=STATUS_PUBLISHED)
-    Creneau_Horaire.objects.get_or_create(jours="Jeudi", heure="08:00:00", cours=c2, personnel=prof, horaire=h_exam_gl, status=STATUS_PUBLISHED)
-    Creneau_Horaire.objects.get_or_create(jours="Vendredi", heure="11:40:00", cours=c4, personnel=prof, horaire=h_exam_sc, status=STATUS_PUBLISHED)
-    Creneau_Horaire.objects.get_or_create(jours="Samedi", heure="08:00:00", cours=c3, personnel=prof, horaire=h_exam_draft, status=STATUS_DRAFT)
+    Creneau_Horaire.objects.get_or_create(jours="Vendredi", heure="08:00:00", cours=c2, personnel=prof, horaire=h_exam_gl, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(jours="Mercredi", heure="08:00:00", cours=c4, personnel=prof, horaire=h_exam_sc, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(jours="Lundi", heure="08:00:00", cours=c3, personnel=prof, horaire=h_exam_draft, status=STATUS_DRAFT)
 
-    Creneau_Horaire.objects.get_or_create(jours="Lundi", heure="08:00:00", cours=c2, personnel=prof, horaire=None, status=STATUS_PROPOSED, annotations="Proposition pour le créneau de Base de Données NoSQL")
-    Creneau_Horaire.objects.get_or_create(jours="Mercredi", heure="08:00:00", cours=c3, personnel=prof, horaire=None, status=STATUS_PROPOSED, annotations="Je peux assurer ce cours le mercredi matin")
+    Creneau_Horaire.objects.get_or_create(jours="Mardi", heure="08:00:00", cours=c2, personnel=prof, horaire=None, status=STATUS_PROPOSED, annotations="Proposition pour le créneau de Base de Données NoSQL")
 
     print("Base de données prête !")
     print("---------------------------------------")

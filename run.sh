@@ -24,4 +24,4 @@ python manage.py migrate
 
 # Lancer le serveur
 echo "Lancement du serveur de développement..."
-python manage.py runserver
+python manage.py runserver 0.0.0.0:8000

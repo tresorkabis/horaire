@@ -289,6 +289,16 @@ class Cours(models.Model):
     id_cours = models.AutoField(primary_key=True)
     titre = models.CharField(max_length=200)
     duree = models.PositiveIntegerField(help_text="Durée en minutes")
+    enseignant = models.ForeignKey(
+        Personnel, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="cours_assignes",
+        help_text="Enseignant habilité à dispenser ce cours",
+    )
+    promotion = models.ForeignKey(
+        Promotion, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="cours",
+        help_text="Promotion à laquelle ce cours est associé",
+    )
 
     class Meta:
         verbose_name = "Cours"

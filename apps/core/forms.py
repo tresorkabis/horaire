@@ -194,7 +194,19 @@ class PromotionForm(BaseForm):
 class CoursForm(BaseForm):
     class Meta:
         model = Cours
-        fields = ("titre", "duree")
+        fields = ("titre", "duree", "enseignant")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Inclure les enseignants et les chefs de filière (qui peuvent aussi enseigner)
+        self.fields["enseignant"].queryset = Personnel.objects.filter(  # type: ignore
+            roles_associes__role__libelle__in=["Enseignant", "Chef de Filière"]
+        ).distinct().order_by("nom", "post_nom")
+        self.fields["enseignant"].required = False
+
+        # Si on édite un cours existant, s'assurer que l'enseignant est bien sélectionné
+        if self.instance and self.instance.pk and self.instance.enseignant:
+            self.fields["enseignant"].initial = self.instance.enseignant.pk
 
 
 class FonctionForm(BaseForm):

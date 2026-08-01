@@ -226,10 +226,13 @@ def schedule_list(request):
     if user.is_enseignant and hasattr(request.user, "personnel"):
         context["is_enseignant"] = True
         horaires = horaires.filter(personnel=request.user.personnel)
-    elif user.is_sga:
-        context["is_sga"] = True
     elif user.is_chef:
         context["is_chef"] = True
+        # Le chef de filière ne voit que les créneaux de ses propres promotions
+        # Filtrer par la filière Génie Logiciel (filière du chef)
+        horaires = horaires.filter(horaire__promotion__filiere__nom_filiere="Génie Logiciel")
+    elif user.is_sga:
+        context["is_sga"] = True
     elif user.is_etudiant:
         context["is_etudiant"] = True
         # Filtrer par promotion si l'étudiant est connecté
@@ -337,12 +340,38 @@ def edit_schedule(request, pk=None):
             "note": d.note or "",
         })
     disponibilites_json = json.dumps(dispo_data)
+
+    # Mapping cours → enseignant (basé sur les créneaux existants)
+    cours_enseignant = {}
+    for c in Cours.objects.all():
+        creneau = Creneau_Horaire.objects.filter(cours=c).select_related("personnel").first()
+        if creneau and creneau.personnel:
+            cours_enseignant[str(c.pk)] = str(creneau.personnel.pk)
+    cours_enseignant_json = json.dumps(cours_enseignant)
+
+    # Propositions de l'enseignant sélectionné (pour pré-remplissage)
+    # Structurer par enseignant → jour → liste de propositions
+    propositions_par_enseignant_par_jour = defaultdict(lambda: defaultdict(list))
+    for prop in Creneau_Horaire.objects.filter(status=STATUS_PROPOSED, horaire__isnull=True):
+        teacher_id = str(prop.personnel.pk)
+        jour_key = prop.jours or (prop.date.strftime("%A") if prop.date else "Inconnu")
+        propositions_par_enseignant_par_jour[teacher_id][jour_key].append({
+            "id": prop.pk,
+            "cours": prop.cours.titre,
+            "jours": prop.jours,
+            "date": prop.date.strftime("%Y-%m-%d") if prop.date else None,
+            "heure": prop.heure,
+            "type": prop.type_horaire,
+        })
+    propositions_json = json.dumps(propositions_par_enseignant_par_jour)
     
     return render(request, "core/edit_schedule.html", {
-        "creneau": creneau, 
-        "form": form, 
+        "creneau": creneau,
+        "form": form,
         "horaires": horaires_dispos,
         "disponibilites_json": disponibilites_json,
+        "cours_enseignant_json": cours_enseignant_json,
+        "propositions_json": propositions_json,
     })
 
 
@@ -554,9 +583,25 @@ def manage_referentiel(request, type_objet, pk=None):
         return redirect("manage_referentiel", type_objet=type_objet)
 
     objets_list = model.objects.all()
+    # Filtrer les promotions pour le chef de filière (uniquement Génie Logiciel)
+    if type_objet == "promotions" and request.user.is_chef:
+        objets_list = objets_list.filter(filiere__nom_filiere="Génie Logiciel")
     page_number = request.GET.get("page", 1)
     paginator = Paginator(objets_list, PAGINATE_BY)
     page_obj = paginator.get_page(page_number)
+
+    # Pour les cours, récupérer l'enseignant lié à chaque cours
+    enseignants_par_cours = {}
+    if type_objet == "cours":
+        for cours in page_obj:
+            if cours.enseignant:
+                enseignants_par_cours[cours.pk] = [cours.enseignant]
+            else:
+                # Fallback : déduire des créneaux existants
+                enseignants = Personnel.objects.filter(
+                    dispense_cours__cours=cours
+                ).distinct()
+                enseignants_par_cours[cours.pk] = list(enseignants)
 
     return render(
         request,
@@ -570,6 +615,7 @@ def manage_referentiel(request, type_objet, pk=None):
             "type_objet": type_objet,
             "champ_nom": champ_nom,
             "user_roles": _roles(request.user),
+            "enseignants_par_cours": enseignants_par_cours,
         },
     )
 
@@ -657,9 +703,8 @@ def horaire_list(request):
     )
     
     if user.is_chef:
-        # Le chef ne voit que les horaires de sa filière (si définie)
-        # Pour l'instant, on affiche tout ou on filtre par filière si on ajoute ce champ au profil
-        pass
+        # Le chef ne voit que les horaires de sa filière (Génie Logiciel)
+        horaires = horaires.filter(promotion__filiere__nom_filiere="Génie Logiciel")
 
     context = {
         "horaires": horaires,

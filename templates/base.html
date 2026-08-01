@@ -50,7 +50,7 @@
       <a href="{% url 'dashboard' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'dashboard' %}bg-blue-500 text-white shadow-lg shadow-blue-950/30{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-table-cells w-5"></i>Tableau de bord</a>
 
       {% if is_chef and not is_enseignant %}
-      <a href="{% url 'create_schedule' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'create_schedule' or url_name == 'edit_schedule' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-regular fa-calendar-days w-5"></i>Créneaux</a>
+      <a href="{% url 'schedule_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'schedule_list' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-regular fa-calendar-days w-5"></i>Créneaux</a>
       {% endif %}
 
       {% if is_chef %}
