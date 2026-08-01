@@ -17,6 +17,7 @@ from .forms import (
     EtudiantForm,
     FiliereForm,
     FonctionForm,
+    HoraireForm,
     PersonnelForm,
     PromotionForm,
 )
@@ -283,7 +284,13 @@ def schedule_list(request):
 
 @role_required(ROLE_CHEF)
 def edit_schedule(request, pk=None):
-    """Création ou édition d'un créneau horaire (Chef de Filière)."""
+    """
+    Création ou édition d'un créneau horaire (Chef de Filière).
+    
+    Un Créneau est une proposition individuelle qui peut être :
+    - Indépendante (proposition isolée)
+    - Intégrée dans un Horaire global
+    """
     creneau = get_object_or_404(Creneau_Horaire, pk=pk) if pk else None
     
     if creneau and creneau.status not in (STATUS_DRAFT, STATUS_PROPOSED):
@@ -299,18 +306,17 @@ def edit_schedule(request, pk=None):
         status = request.POST.get("status")
         instance.status = status if status in (STATUS_DRAFT, STATUS_PROPOSED) else STATUS_DRAFT
         
-        # Si le Chef veut l'affecter à un horaire global, on récupère l'ID depuis le POST
+        # Si le Chef veut l'affecter à un Horaire global, on récupère l'ID depuis le POST
         horaire_id = request.POST.get("horaire")
         if horaire_id:
-            from .models import Horaire
-            instance.horaire = Horaire.objects.get(pk=horaire_id)
+            horaire = Horaire.objects.get(pk=horaire_id)
+            instance.horaire = horaire
         
         instance.save()
         messages.success(request, "Créneau enregistré avec succès.")
         return redirect("dashboard")
 
     # Pour le formulaire, on peut ajouter la liste des Horaires disponibles pour l'affectation
-    from .models import Horaire
     horaires_dispos = Horaire.objects.all()
     
     # Disponibilités des enseignants pour le lien visuel dans le formulaire
@@ -324,7 +330,7 @@ def edit_schedule(request, pk=None):
     # Structurer les données par enseignant → jour → liste de créneaux
     dispo_data = defaultdict(lambda: defaultdict(list))
     for d in disponibilites_qs:
-        teacher_id = str(d.enseignant_id)
+        teacher_id = str(d.enseignant.pk)
         dispo_data[teacher_id][d.jour].append({
             "debut": d.heure_debut.strftime("%H:%M"),
             "fin": d.heure_fin.strftime("%H:%M"),
@@ -343,13 +349,14 @@ def edit_schedule(request, pk=None):
 @role_required(ROLE_CHEF)
 def publish_schedule(request, pk):
     """
-    Publication d'un horaire global.
-    Désormais, on publie l'objet Horaire, pas le créneau individuel.
+    Publication d'un Horaire global (ensemble de créneaux).
+    
+    Un Horaire est un conteneur validé qui peut être publié.
+    Seul un Horaire CONFIRMED par le SGA peut être publié.
     """
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
     
-    from .models import Horaire
     horaire = get_object_or_404(Horaire, pk=pk)
     
     if horaire.status != STATUS_CONFIRMED:
@@ -365,12 +372,13 @@ def publish_schedule(request, pk):
 @role_required(ROLE_SGA)
 def confirm_schedule(request, pk):
     """
-    Confirmation d'un horaire global (SG-A).
+    Confirmation d'un Horaire global par le SG-A.
+    
+    Le SG-A confirme l'ensemble des créneaux regroupés dans l'Horaire.
     """
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
     
-    from .models import Horaire
     horaire = get_object_or_404(Horaire, pk=pk)
     
     if horaire.status != STATUS_PROPOSED:
@@ -661,6 +669,27 @@ def horaire_list(request):
         "TYPE_EXAMEN": TYPE_EXAMEN,
     }
     return render(request, "core/horaire_list.html", context)
+
+
+@role_required(ROLE_CHEF)
+def create_horaire(request):
+    """Création d'un horaire global (Chef de Filière)."""
+    if request.method == "POST":
+        form = HoraireForm(request.POST)
+        if form.is_valid():
+            horaire = form.save(commit=False)
+            # Par défaut, un horaire créé par le chef est en brouillon
+            horaire.status = STATUS_DRAFT
+            horaire.save()
+            messages.success(request, "Emploi du temps créé avec succès. Vous pouvez maintenant y intégrer des créneaux.")
+            return redirect("horaire_list")
+    else:
+        form = HoraireForm()
+    
+    return render(request, "core/create_horaire.html", {
+        "form": form,
+        "user_roles": _roles(request.user),
+    })
 
 
 @role_required(ROLE_CHEF)

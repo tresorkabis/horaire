@@ -44,9 +44,16 @@ def seed():
         Utilisateur_Role.objects.get_or_create(id_util=user, role=roles[role_name])
         return user
 
-    chef = create_actor("chef", "MUKENDI", "Alain", "Chef de Filière", Personnel, matricule="P001", grade="Professeur")
-    prof = create_actor("prof", "TSHIMANGA", "Jean", "Enseignant", Personnel, matricule="P002", grade="Chef de Travaux")
-    sga = create_actor("sga", "KASSONGO", "Bibiche", "SG-A", Personnel, matricule="P003", grade="Secrétaire Général")
+    # Nettoyer les anciennes fonctions qui ne sont plus pertinentes
+    Fonction.objects.filter(intitule__in=["Cours Théorique", "Travaux Pratiques", "Examen"]).delete()
+
+    f_chef, _ = Fonction.objects.get_or_create(intitule="Chef de Filière")
+    f_enseignant, _ = Fonction.objects.get_or_create(intitule="Enseignant")
+    f_sga, _ = Fonction.objects.get_or_create(intitule="SG-A")
+
+    chef = create_actor("chef", "MUKENDI", "Alain", "Chef de Filière", Personnel, matricule="P001", grade="Professeur", fonction=f_chef)
+    prof = create_actor("prof", "TSHIMANGA", "Jean", "Enseignant", Personnel, matricule="P002", grade="Chef de Travaux", fonction=f_enseignant)
+    sga = create_actor("sga", "KASSONGO", "Bibiche", "SG-A", Personnel, matricule="P003", grade="Secrétaire Général", fonction=f_sga)
     sga.is_staff = True
     sga.is_superuser = True
     sga.save()
@@ -58,10 +65,6 @@ def seed():
     c4, _ = Cours.objects.get_or_create(titre="Marketing Digital", defaults={'duree': 90})
     c5, _ = Cours.objects.get_or_create(titre="Administration Réseau", defaults={'duree': 120})
     c6, _ = Cours.objects.get_or_create(titre="Communication Professionnelle", defaults={'duree': 90})
-
-    f_th, _ = Fonction.objects.get_or_create(intitule="Cours Théorique")
-    f_tp, _ = Fonction.objects.get_or_create(intitule="Travaux Pratiques")
-    f_exam, _ = Fonction.objects.get_or_create(intitule="Examen")
 
     h_draft, _ = Horaire.objects.get_or_create(promotion=l1_gl, titre="Semestre 1 - 2026", defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_COURS})
     h_proposed, _ = Horaire.objects.get_or_create(promotion=l1_gl, titre="Semestre 2 - 2026", defaults={'status': STATUS_PROPOSED, 'type_horaire': TYPE_COURS})

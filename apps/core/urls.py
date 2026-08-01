@@ -7,6 +7,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('schedules/', views.schedule_list, name='schedule_list'),
     path('schedules/edit/', views.edit_schedule, name='create_schedule'),
+    path('horaires/create/', views.create_horaire, name='create_horaire'),
     path('schedules/edit/<int:pk>/', views.edit_schedule, name='edit_schedule'),
     path('schedules/publish/<int:pk>/', views.publish_schedule, name='publish_schedule'),
     path('schedules/confirm/<int:pk>/', views.confirm_schedule, name='confirm_schedule'),

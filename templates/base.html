@@ -43,34 +43,50 @@
       <div class="official-logo h-14 w-16 overflow-hidden rounded-xl border-2 border-white/30 shadow-lg"><img src="{% static 'images/logo-esforca.jpeg' %}" alt="Logo officiel de l’Université ESFORCA" class="h-full w-full scale-[1.8] object-contain"></div>
       <div><div class="font-display text-xl font-extrabold tracking-wide">HORAIRES</div><div class="text-[10px] font-semibold uppercase tracking-[.22em] text-blue-200/75">Université ESFORCA</div></div>
     </div>
-    <nav class="flex-1 space-y-1.5 overflow-y-auto px-4 py-7 text-sm">
+    {% with url_name=request.resolver_match.url_name type_objet=request.resolver_match.kwargs.type_objet %}
+    <nav class="flex-1 space-y-1 overflow-y-auto px-4 py-7 text-sm">
+      <!-- Espace académique -->
       <p class="mb-3 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-blue-200/50">Espace académique</p>
-      <a href="{% url 'dashboard' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if request.resolver_match.url_name == 'dashboard' %}bg-blue-500 text-white shadow-lg shadow-blue-950/30{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-table-cells w-5"></i>Tableau de bord</a>
-      {% if not is_enseignant and 'Enseignant' not in user_roles %}
-      <a href="{% url 'schedule_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if 'schedule' in request.resolver_match.url_name %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-regular fa-calendar-days w-5"></i>Créneaux</a>
-      {% endif %}
-      
-      {% if is_chef or 'Chef de Filière' in user_roles %}
-      <div class="my-4 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-blue-200/50">Coordination</div>
-      <a href="{% url 'horaire_list' %}?type=COURS" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if request.resolver_match.url_name == 'horaire_list' and request.GET.type != 'EXAMEN' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-book-open w-5"></i>Cours</a>
-      <a href="{% url 'horaire_list' %}?type=EXAMEN" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if request.resolver_match.url_name == 'horaire_list' and request.GET.type == 'EXAMEN' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-pen-to-square w-5"></i>Examens</a>
-      <a href="{% url 'propositions_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if request.resolver_match.url_name == 'propositions_list' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-hand-holding-medical w-5"></i>Propositions</a>
+      <a href="{% url 'dashboard' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'dashboard' %}bg-blue-500 text-white shadow-lg shadow-blue-950/30{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-table-cells w-5"></i>Tableau de bord</a>
+
+      {% if is_chef and not is_enseignant %}
+      <a href="{% url 'create_schedule' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'create_schedule' or url_name == 'edit_schedule' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-regular fa-calendar-days w-5"></i>Créneaux</a>
       {% endif %}
 
-      {% if is_enseignant or 'Enseignant' in user_roles %}
-      <div class="my-4 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-blue-200/50">Enseignant</div>
-      <a href="{% url 'teacher_courses' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if request.resolver_match.url_name == 'teacher_courses' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-book-open w-5"></i>Mes cours</a>
-      <a href="{% url 'schedule_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if 'schedule' in request.resolver_match.url_name %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-regular fa-calendar-days w-5"></i>Mes créneaux</a>
-      <a href="{% url 'submit_availability' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if request.resolver_match.url_name == 'submit_availability' or request.resolver_match.url_name == 'delete_availability' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-regular fa-clock w-5"></i>Mes disponibilités</a>
+      {% if is_chef %}
+      <!-- Coordination -->
+      <div class="my-4 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-blue-200/50">Coordination</div>
+      <a href="{% url 'create_horaire' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'create_horaire' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-calendar-plus w-5"></i>Nouvel emploi du temps</a>
+      <a href="{% url 'horaire_list' %}?type=COURS" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'horaire_list' and request.GET.type != 'EXAMEN' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-book-open w-5"></i>Horaires de cours</a>
+      <a href="{% url 'horaire_list' %}?type=EXAMEN" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'horaire_list' and request.GET.type == 'EXAMEN' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-pen-to-square w-5"></i>Horaires d'examens</a>
+      <a href="{% url 'propositions_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'propositions_list' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-hand-holding-medical w-5"></i>Propositions</a>
       {% endif %}
-      {% if is_sga or 'SG-A' in user_roles %}<a href="{% url 'manage_personnel' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold {% if 'personnel' in request.resolver_match.url_name %}bg-blue-500 text-white{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-users w-5"></i>Gestion du personnel</a>{% endif %}
-      <div class="my-5 border-t border-white/10"></div>
-      {% if is_sga %}<a href="{% url 'manage_students' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold text-blue-100/75 hover:bg-white/10 hover:text-white"><i class="fa-solid fa-user-graduate w-5"></i>Étudiants</a>{% endif %}
-      {% if is_sga or is_chef %}<a href="{% url 'manage_referentiel' 'cours' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold text-blue-100/75 hover:bg-white/10 hover:text-white"><i class="fa-solid fa-book-open w-5"></i>Cours</a>
-      <a href="{% url 'manage_referentiel' 'promotions' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold text-blue-100/75 hover:bg-white/10 hover:text-white"><i class="fa-solid fa-layer-group w-5"></i>Promotions</a>
-      <a href="{% url 'manage_referentiel' 'filieres' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold text-blue-100/75 hover:bg-white/10 hover:text-white"><i class="fa-solid fa-code-branch w-5"></i>Filières</a>
-      <a href="{% url 'manage_referentiel' 'fonctions' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold text-blue-100/75 hover:bg-white/10 hover:text-white"><i class="fa-solid fa-briefcase w-5"></i>Fonctions</a>{% endif %}
+
+      {% if is_enseignant %}
+      <!-- Enseignant -->
+      <div class="my-4 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-blue-200/50">Enseignant</div>
+      <a href="{% url 'teacher_courses' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'teacher_courses' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-book-open w-5"></i>Mes cours</a>
+      <a href="{% url 'schedule_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'schedule_list' or url_name == 'edit_schedule' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-regular fa-calendar-days w-5"></i>Mes créneaux</a>
+      <a href="{% url 'submit_availability' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'submit_availability' or url_name == 'delete_availability' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-regular fa-clock w-5"></i>Mes disponibilités</a>
+      {% endif %}
+
+      {% if is_sga %}
+      <!-- SG-A -->
+      <div class="my-4 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-blue-200/50">SG-A</div>
+      <a href="{% url 'manage_personnel' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'manage_personnel' or url_name == 'edit_personnel' or url_name == 'delete_personnel' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-users w-5"></i>Gestion du personnel</a>
+      <a href="{% url 'manage_students' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'manage_students' or url_name == 'edit_student' or url_name == 'delete_student' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-user-graduate w-5"></i>Étudiants</a>
+      {% endif %}
+
+      {% if is_sga or is_chef %}
+      <!-- Référentiels -->
+      <div class="my-4 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-blue-200/50">Référentiels</div>
+      <a href="{% url 'manage_referentiel' 'cours' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'manage_referentiel' and type_objet == 'cours' or url_name == 'edit_referentiel' and type_objet == 'cours' or url_name == 'delete_referentiel' and type_objet == 'cours' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-book-open w-5"></i>Cours</a>
+      <a href="{% url 'manage_referentiel' 'promotions' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'manage_referentiel' and type_objet == 'promotions' or url_name == 'edit_referentiel' and type_objet == 'promotions' or url_name == 'delete_referentiel' and type_objet == 'promotions' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-layer-group w-5"></i>Promotions</a>
+      <a href="{% url 'manage_referentiel' 'filieres' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'manage_referentiel' and type_objet == 'filieres' or url_name == 'edit_referentiel' and type_objet == 'filieres' or url_name == 'delete_referentiel' and type_objet == 'filieres' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-code-branch w-5"></i>Filières</a>
+      <a href="{% url 'manage_referentiel' 'fonctions' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'manage_referentiel' and type_objet == 'fonctions' or url_name == 'edit_referentiel' and type_objet == 'fonctions' or url_name == 'delete_referentiel' and type_objet == 'fonctions' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-briefcase w-5"></i>Fonctions</a>
+      {% endif %}
     </nav>
+    {% endwith %}
     <div class="border-t border-white/10 p-4"><div class="flex items-center gap-3 rounded-2xl bg-white/[.07] p-3"><div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 font-display font-bold">{{ user.nom|slice:':1' }}{{ user.post_nom|slice:':1' }}</div><div class="min-w-0 flex-1"><p class="truncate text-sm font-bold">{{ user.nom }} {{ user.post_nom }}</p><p class="truncate text-[11px] text-blue-200/60">{{ user.email }}</p></div><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button title="Déconnexion" class="text-blue-200/60 hover:text-white"><i class="fa-solid fa-arrow-right-from-bracket"></i></button></form></div></div>
   </aside>
   <section class="min-w-0 flex-1">

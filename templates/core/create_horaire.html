@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Nouvel Emploi du Temps · ESFORCA{% endblock %}
+{% block page_name %}Nouvel Emploi du Temps{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-2xl">
+  <div class="mb-6 rounded-3xl border border-slate-200/70 bg-white p-6 shadow-card">
+    <h2 class="font-display text-xl font-extrabold text-slate-950">Créer un emploi du temps global</h2>
+    <p class="mt-1 text-xs text-slate-400">Définissez le conteneur principal puis ajoutez-y des créneaux.</p>
+  </div>
+
+  <form method="post" class="rounded-3xl border border-slate-200/70 bg-white p-6 shadow-card">
+    {% csrf_token %}
+    
+    <div class="mb-5">
+      <label class="mb-2 block text-xs font-bold text-slate-500">Titre</label>
+      {{ form.titre }}
+      {% if form.titre.errors %}
+      <p class="mt-1 text-xs text-red-600">{{ form.titre.errors|striptags }}</p>
+      {% endif %}
+    </div>
+
+    <div class="mb-5">
+      <label class="mb-2 block text-xs font-bold text-slate-500">Promotion</label>
+      {{ form.promotion }}
+      {% if form.promotion.errors %}
+      <p class="mt-1 text-xs text-red-600">{{ form.promotion.errors|striptags }}</p>
+      {% endif %}
+    </div>
+
+    <div class="mb-6">
+      <label class="mb-2 block text-xs font-bold text-slate-500">Type</label>
+      {{ form.type_horaire }}
+      {% if form.type_horaire.errors %}
+      <p class="mt-1 text-xs text-red-600">{{ form.type_horaire.errors|striptags }}</p>
+      {% endif %}
+    </div>
+
+    <div class="flex items-center justify-end gap-3">
+      <a href="{% url 'horaire_list' %}" class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50">Annuler</a>
+      <button type="submit" class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-brand-700"><i class="fa-solid fa-plus mr-2"></i>Créer l'horaire</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

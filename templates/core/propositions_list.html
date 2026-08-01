@@ -29,7 +29,7 @@
                 <tr class="transition hover:bg-slate-50/50">
                     <td class="px-6 py-4">
                         <div class="font-bold text-slate-900">{{ prop.cours.titre }}</div>
-                        <div class="text-xs text-slate-500">{{ prop.fonction.intitule }}</div>
+                        <div class="text-xs text-slate-500">{{ prop.personnel.fonction.intitule|default:"—" }}</div>
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-2">

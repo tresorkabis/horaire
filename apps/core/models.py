@@ -150,11 +150,31 @@ class Utilisateur(AbstractBaseUser, PermissionsMixin):
         return self.a_role(ROLE_SGA)
 
 
+class Fonction(models.Model):
+    """Fonction occupée par le personnel (Chef de Filière, Enseignant, etc.)."""
+
+    id_fonction = models.AutoField(primary_key=True)
+    intitule = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name = "Fonction"
+        verbose_name_plural = "Fonctions"
+        ordering = ["intitule"]
+
+    def __str__(self):
+        return self.intitule
+
+
 class Personnel(Utilisateur):
     """Personnel académique (enseignants, administratifs)."""
 
     matricule = models.CharField(max_length=50, unique=True, null=True, blank=True)
     grade = models.CharField(max_length=100, null=True, blank=True)
+    fonction = models.ForeignKey(
+        Fonction, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="personnels",
+        help_text="Fonction occupée par le personnel (Chef de Filière, Enseignant, etc.)",
+    )
 
     class Meta:
         verbose_name = "Personnel"
@@ -277,21 +297,6 @@ class Cours(models.Model):
 
     def __str__(self):
         return self.titre
-
-
-class Fonction(models.Model):
-    """Type de séance (Cours Théorique, Travaux Pratiques, etc.)."""
-
-    id_fonction = models.AutoField(primary_key=True)
-    intitule = models.CharField(max_length=100)
-
-    class Meta:
-        verbose_name = "Fonction"
-        verbose_name_plural = "Fonctions"
-        ordering = ["intitule"]
-
-    def __str__(self):
-        return self.intitule
 
 
 class Horaire(models.Model):

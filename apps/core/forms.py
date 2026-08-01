@@ -7,6 +7,7 @@ from .models import (
     Etudiant,
     Filiere,
     Fonction,
+    Horaire,
     Personnel,
     Promotion,
     Role,
@@ -59,7 +60,7 @@ class CreneauHoraireForm(BaseForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["personnel"].queryset = Personnel.objects.filter(
+        self.fields["personnel"].queryset = Personnel.objects.filter(  # type: ignore
             roles_associes__role__libelle="Enseignant"
         ).distinct().order_by("nom", "post_nom")
         # On rend le champ horaire optionnel pour permettre les propositions isolées
@@ -123,11 +124,11 @@ class PersonnelForm(BaseForm):
 
     class Meta:
         model = Personnel
-        fields = ("nom", "post_nom", "sexe", "email", "matricule", "grade")
+        fields = ("nom", "post_nom", "sexe", "email", "matricule", "grade", "fonction")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["role"].queryset = Role.objects.all().order_by("libelle")
+        self.fields["role"].queryset = Role.objects.all().order_by("libelle")  # type: ignore
         if self.instance.pk:
             association = self.instance.roles_associes.select_related("role").first()
             if association:
@@ -200,6 +201,26 @@ class FonctionForm(BaseForm):
     class Meta:
         model = Fonction
         fields = ("intitule",)
+
+
+class HoraireForm(BaseForm):
+    """Formulaire de création d'un horaire global (Chef de Filière)."""
+
+    class Meta:
+        model = Horaire
+        fields = ("titre", "promotion", "type_horaire")
+        widgets = {
+            "titre": forms.TextInput(attrs={
+                "placeholder": "ex: Semestre 1 - 2026"
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Limiter aux promotions de la filière du chef si possible
+        self.fields["promotion"].queryset = Promotion.objects.all().order_by(  # type: ignore
+            "filiere__nom_filiere", "designation"
+        )
 
 
 class EtudiantForm(BaseForm):

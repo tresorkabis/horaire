@@ -9,7 +9,10 @@
     <p class="mt-2 text-slate-500">Pilotez la planification académique de l'Université ESFORCA en toute sérénité.</p>
   </div>
   {% if is_chef %}
-  <a href="{% url 'create_schedule' %}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-brand-700"><i class="fa-solid fa-plus"></i>Créer un créneau</a>
+  <div class="flex gap-3">
+    <a href="{% url 'create_horaire' %}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-brand-700"><i class="fa-solid fa-calendar-plus"></i>Nouvel emploi du temps</a>
+    <a href="{% url 'create_schedule' %}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-600 transition hover:-translate-y-0.5 hover:bg-slate-50"><i class="fa-solid fa-plus"></i>Créer un créneau</a>
+  </div>
   {% endif %}
   {% if is_enseignant %}
   <div class="flex gap-3">
@@ -281,7 +284,7 @@
         <tr class="group transition hover:bg-brand-50/30">
           <td class="px-6 py-4">
             <p class="text-sm font-bold text-slate-800">{{ p.cours.titre }}</p>
-            <p class="text-xs text-slate-400">{{ p.fonction.intitule }}</p>
+            <p class="text-xs text-slate-400">{{ p.personnel.fonction.intitule|default:"—" }}</p>
           </td>
           <td class="px-6 py-4">
             <p class="text-sm font-semibold text-slate-700">{{ p.personnel.nom }}</p>

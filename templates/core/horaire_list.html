@@ -9,9 +9,11 @@
             <h1 class="text-2xl font-extrabold text-slate-900">Gestion des Horaires</h1>
             <p class="text-sm text-slate-500">Planifiez et validez les emplois du temps par promotion.</p>
         </div>
-        <a href="#" class="flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-brand-700 shadow-lg shadow-blue-950/20">
+        {% if is_chef or is_sga %}
+        <a href="{% url 'create_horaire' %}" class="flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-brand-700 shadow-lg shadow-blue-950/20">
             <i class="fa-solid fa-plus"></i> Nouvel Horaire
         </a>
+        {% endif %}
     </div>
 
     <div class="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
