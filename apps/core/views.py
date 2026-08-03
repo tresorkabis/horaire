@@ -185,24 +185,35 @@ def dashboard(request):
             cours_aujourdhui_count=cours_aujourdhui.count(),
         )
     elif user.is_etudiant and hasattr(request.user, "etudiant"):
-        # Filtrer les créneaux dont l'horaire global est PUBLISHED et lié à sa promotion
+        # Pour les étudiants, on veut afficher les horaires globaux (Horaire) de leur promotion
         etudiant = request.user.etudiant
         if etudiant.promotion:
-            horaires = related_creneaux.filter(
-                horaire__status=STATUS_PUBLISHED, 
-                horaire__promotion=etudiant.promotion
-            )
+            # Récupérer les horaires globaux PUBLISHED de la promotion de l'étudiant
+            horaires_globaux = Horaire.objects.filter(
+                status=STATUS_PUBLISHED,
+                promotion=etudiant.promotion
+            ).select_related("promotion__filiere")
         else:
-            horaires = related_creneaux.filter(horaire__status=STATUS_PUBLISHED)
-        context.update(is_etudiant=True, horaires=horaires)
+            horaires_globaux = Horaire.objects.filter(status=STATUS_PUBLISHED).select_related("promotion__filiere")
+
+        context.update(
+            is_etudiant=True,
+            horaires=horaires_globaux,
+            etudiant_promotion=etudiant.promotion
+        )
 
     # Statistiques globales pour le dashboard
     horaires_final = context["horaires"]
-    context["published_count"] = horaires_final.filter(horaire__status=STATUS_PUBLISHED).count() if not user.is_enseignant else 0
+    context["published_count"] = horaires_final.filter(status=STATUS_PUBLISHED).count() if not user.is_enseignant else 0
     context["pending_count"] = horaires_final.filter(
-        horaire__status__in=("PROPOSED", "CONFIRMED")
+        status__in=("PROPOSED", "CONFIRMED")
     ).count() if not user.is_enseignant else 0
-    
+
+    # Statistiques spécifiques pour les étudiants
+    if user.is_etudiant:
+        context["etudiant_cours_count"] = horaires_final.filter(type_horaire=TYPE_COURS).count()
+        context["etudiant_examens_count"] = horaires_final.filter(type_horaire=TYPE_EXAMEN).count()
+
     return render(request, "core/dashboard.html", context)
 
 
@@ -773,11 +784,19 @@ def create_horaire(request):
         "user_roles": _roles(request.user),
     })
 
-@role_required(ROLE_CHEF, ROLE_SGA)
+@role_required(ROLE_CHEF, ROLE_SGA, ROLE_ETUDIANT)
 def view_horaire(request, pk):
-    """Affichage des détails d'un horaire global (Chef de Filière et SGA)."""
+    """Affichage des détails d'un horaire global (Chef de Filière, SGA et Étudiant)."""
     from .models import JOURS_CHOICES
     horaire = get_object_or_404(Horaire, pk=pk)
+
+    # Vérifier que l'étudiant ne peut voir que les horaires de sa promotion
+    user = request.user
+    if user.is_etudiant and hasattr(user, "etudiant"):
+        if user.etudiant.promotion and horaire.promotion != user.etudiant.promotion:
+            messages.error(request, "Accès refusé : vous ne pouvez voir que les horaires de votre promotion.")
+            return redirect("dashboard")
+
     return render(request, "core/view_horaire.html", {
         "horaire": horaire,
         "user_roles": _roles(request.user),
