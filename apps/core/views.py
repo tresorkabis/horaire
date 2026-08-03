@@ -52,6 +52,20 @@ def _roles(user):
     """Retourne l'ensemble des rôles de l'utilisateur (cache par requête via le modèle)."""
     return user.roles
 
+def get_annee_academique():
+    """
+    Retourne l'année académique en cours au format "YYYY-YYYY".
+    L'année académique commence en septembre et se termine en août.
+    Exemple : Pour une date en septembre 2025 - août 2026, retourne "2025-2026"
+    """
+    today = datetime.date.today()
+    # Si nous sommes entre janvier et août, l'année académique est (année-1)-année
+    if today.month <= 8:
+        return f"{today.year - 1}-{today.year}"
+    # Si nous sommes entre septembre et décembre, l'année académique est année-(année+1)
+    else:
+        return f"{today.year}-{today.year + 1}"
+
 
 def role_required(*allowed_roles):
     """Décorateur exigeant que l'utilisateur possède au moins un des rôles donnés."""
@@ -815,9 +829,9 @@ def view_horaire(request, pk):
         "jours_semaine": JOURS_CHOICES,
     })
 
-@role_required(ROLE_CHEF)
+@role_required(ROLE_CHEF, ROLE_SGA)
 def edit_horaire(request, pk):
-    """Édition d'un horaire global (Chef de Filière)."""
+    """Édition d'un horaire global (Chef de Filière et SGA)."""
     horaire = get_object_or_404(Horaire, pk=pk)
 
     if request.method == "POST":
@@ -863,13 +877,13 @@ def generate_promotion_horaires(request, promotion_id):
         messages.error(request, "Vous ne pouvez générer des horaires que pour les promotions de Génie Logiciel.")
         return redirect("manage_referentiel", type_objet="promotions")
 
-    current_year = datetime.date.today().year
+    annee_academique = get_annee_academique()
     horaires_crees = 0
 
     # Générer les horaires de cours manquants
     cours_s1, created = Horaire.objects.get_or_create(
         promotion=promotion,
-        titre=f"Semestre 1 - {current_year}",
+        titre=f"Semestre 1 - {annee_academique}",
         defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_COURS}
     )
     if created:
@@ -877,7 +891,7 @@ def generate_promotion_horaires(request, promotion_id):
 
     cours_s2, created = Horaire.objects.get_or_create(
         promotion=promotion,
-        titre=f"Semestre 2 - {current_year}",
+        titre=f"Semestre 2 - {annee_academique}",
         defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_COURS}
     )
     if created:
@@ -886,7 +900,7 @@ def generate_promotion_horaires(request, promotion_id):
     # Générer les horaires d'examens manquants
     exam_s1_session, created = Horaire.objects.get_or_create(
         promotion=promotion,
-        titre=f"Session Semestre 1 - {current_year}",
+        titre=f"Session Semestre 1 - {annee_academique}",
         defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_EXAMEN}
     )
     if created:
@@ -894,7 +908,7 @@ def generate_promotion_horaires(request, promotion_id):
 
     exam_s1_rattrapage, created = Horaire.objects.get_or_create(
         promotion=promotion,
-        titre=f"Rattrapage Semestre 1 - {current_year}",
+        titre=f"Rattrapage Semestre 1 - {annee_academique}",
         defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_EXAMEN}
     )
     if created:
@@ -902,7 +916,7 @@ def generate_promotion_horaires(request, promotion_id):
 
     exam_s2_session, created = Horaire.objects.get_or_create(
         promotion=promotion,
-        titre=f"Session Semestre 2 - {current_year}",
+        titre=f"Session Semestre 2 - {annee_academique}",
         defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_EXAMEN}
     )
     if created:
@@ -910,7 +924,7 @@ def generate_promotion_horaires(request, promotion_id):
 
     exam_s2_rattrapage, created = Horaire.objects.get_or_create(
         promotion=promotion,
-        titre=f"Rattrapage Semestre 2 - {current_year}",
+        titre=f"Rattrapage Semestre 2 - {annee_academique}",
         defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_EXAMEN}
     )
     if created:
@@ -936,7 +950,7 @@ def regenerate_promotion_horaires(request, promotion_id):
         messages.error(request, "Vous ne pouvez régénérer des horaires que pour les promotions de Génie Logiciel.")
         return redirect("manage_referentiel", type_objet="promotions")
 
-    current_year = datetime.date.today().year
+    annee_academique = get_annee_academique()
 
     # Supprimer les horaires existants de cette promotion
     horaires_existants = Horaire.objects.filter(promotion=promotion)
@@ -946,42 +960,42 @@ def regenerate_promotion_horaires(request, promotion_id):
     # Créer de nouveaux horaires vides
     Horaire.objects.create(
         promotion=promotion,
-        titre=f"Semestre 1 - {current_year}",
+        titre=f"Semestre 1 - {annee_academique}",
         status=STATUS_DRAFT,
         type_horaire=TYPE_COURS
     )
 
     Horaire.objects.create(
         promotion=promotion,
-        titre=f"Semestre 2 - {current_year}",
+        titre=f"Semestre 2 - {annee_academique}",
         status=STATUS_DRAFT,
         type_horaire=TYPE_COURS
     )
 
     Horaire.objects.create(
         promotion=promotion,
-        titre=f"Session Semestre 1 - {current_year}",
+        titre=f"Session Semestre 1 - {annee_academique}",
         status=STATUS_DRAFT,
         type_horaire=TYPE_EXAMEN
     )
 
     Horaire.objects.create(
         promotion=promotion,
-        titre=f"Rattrapage Semestre 1 - {current_year}",
+        titre=f"Rattrapage Semestre 1 - {annee_academique}",
         status=STATUS_DRAFT,
         type_horaire=TYPE_EXAMEN
     )
 
     Horaire.objects.create(
         promotion=promotion,
-        titre=f"Session Semestre 2 - {current_year}",
+        titre=f"Session Semestre 2 - {annee_academique}",
         status=STATUS_DRAFT,
         type_horaire=TYPE_EXAMEN
     )
 
     Horaire.objects.create(
         promotion=promotion,
-        titre=f"Rattrapage Semestre 2 - {current_year}",
+        titre=f"Rattrapage Semestre 2 - {annee_academique}",
         status=STATUS_DRAFT,
         type_horaire=TYPE_EXAMEN
     )

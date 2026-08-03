@@ -216,14 +216,17 @@ class FonctionForm(BaseForm):
 
 
 class HoraireForm(BaseForm):
-    """Formulaire de création d'un horaire global (Chef de Filière)."""
+    """Formulaire de création/édition d'un horaire global (Chef de Filière)."""
 
     class Meta:
         model = Horaire
-        fields = ("titre", "promotion", "type_horaire")
+        fields = ("titre", "promotion", "type_horaire", "status")
         widgets = {
             "titre": forms.TextInput(attrs={
                 "placeholder": "ex: Semestre 1 - 2026"
+            }),
+            "status": forms.Select(attrs={
+                "class": "w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-500 outline-none"
             }),
         }
 

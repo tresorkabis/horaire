@@ -120,7 +120,7 @@ class Utilisateur(AbstractBaseUser, PermissionsMixin):
     def _roles_cache(self):
         """Ensemble des libellés de rôles associés (mis en cache par requête)."""
         return set(
-            self.roles_associes.select_related("role")
+            self.roles_associes.select_related("role")  # type: ignore[attr-defined]
             .values_list("role__libelle", flat=True)
         )
 
@@ -176,7 +176,7 @@ class Personnel(Utilisateur):
         help_text="Fonction occupée par le personnel (Chef de Filière, Enseignant, etc.)",
     )
 
-    class Meta:
+    class Meta(Utilisateur.Meta):  # type: ignore[misc]
         verbose_name = "Personnel"
         verbose_name_plural = "Personnels"
 
@@ -271,7 +271,7 @@ class Etudiant(Utilisateur):
         Promotion, on_delete=models.SET_NULL, null=True, related_name="etudiants"
     )
 
-    class Meta:
+    class Meta(Utilisateur.Meta):  # type: ignore[misc]
         verbose_name = "Étudiant"
         verbose_name_plural = "Étudiants"
 
@@ -343,7 +343,23 @@ class Horaire(models.Model):
 
     def get_creneau_for_jour_heure(self, jour, heure):
         """Retourne le créneau pour un jour et une heure donnés, ou None."""
-        return self.creneaux.filter(jours=jour, heure=heure).first()
+        return self.creneaux.filter(jours=jour, heure=heure).first()  # type: ignore[attr-defined]
+
+    def peut_transitionner_vers(self, nouvel_etat):
+        """Vérifie si la transition vers *nouvel_etat* est autorisée."""
+        return nouvel_etat in WORKFLOW_TRANSITIONS.get(self.status, set())
+
+    def transitionner(self, nouvel_etat):
+        """Effectue la transition de statut en validant le workflow."""
+        if not self.peut_transitionner_vers(nouvel_etat):
+            raise ValueError(f"Transition interdite : {self.status} vers {nouvel_etat}")
+        self.status = nouvel_etat
+        self.save(update_fields=["status"])
+
+    @property
+    def status_label(self):
+        """Retourne le libellé lisible du statut actuel."""
+        return dict(STATUS_CHOICES).get(self.status, self.status)
 
 
 # ---------------------------------------------------------------------------
