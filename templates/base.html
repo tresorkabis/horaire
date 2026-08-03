@@ -8,7 +8,33 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],display:['Manrope','sans-serif']},colors:{brand:{50:'#eef6ff',100:'#d9eaff',500:'#1475e8',600:'#075fc7',700:'#074ca0',900:'#092d54'},navy:'#071f3d'},boxShadow:{soft:'0 12px 35px rgba(15,39,71,.07)',card:'0 2px 8px rgba(15,39,71,.04),0 18px 45px rgba(15,39,71,.05)'}}}}}</script>
+  <script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['DM Sans', 'sans-serif'],
+          display: ['Manrope', 'sans-serif']
+        },
+        colors: {
+          brand: {
+            50: '#eef6ff',
+            100: '#d9eaff',
+            500: '#1475e8',
+            600: '#075fc7',
+            700: '#074ca0',
+            900: '#092d54'
+          },
+          navy: '#071f3d'
+        },
+        boxShadow: {
+          soft: '0 12px 35px rgba(15,39,71,.07)',
+          card: '0 2px 8px rgba(15,39,71,.04),0 18px 45px rgba(15,39,71,.05)'
+        }
+      }
+    }
+  }
+</script>
   <style>
     *{scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}.nav-noise{background-image:radial-gradient(circle at 15% 5%,rgba(32,129,236,.35),transparent 26%),linear-gradient(160deg,#0a3768 0%,#071f3d 72%)}
     body{background:radial-gradient(circle at 78% 5%,rgba(196,181,253,.22),transparent 25%),radial-gradient(circle at 38% 0%,rgba(125,211,252,.22),transparent 28%),linear-gradient(145deg,#eaf2fc 0%,#f1effb 52%,#e7f1fb 100%);background-attachment:fixed}
@@ -52,6 +78,9 @@
       {% if is_chef and not is_enseignant %}
       <a href="{% url 'schedule_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'schedule_list' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-regular fa-calendar-days w-5"></i>Créneaux</a>
       {% endif %}
+      {% if is_sga %}
+      <a href="{% url 'schedule_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'schedule_list' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-regular fa-calendar-days w-5"></i>Tous les créneaux</a>
+      {% endif %}
 
       {% if is_chef %}
       <!-- Coordination -->
@@ -73,6 +102,7 @@
       {% if is_sga %}
       <!-- SG-A -->
       <div class="my-4 px-3 text-[10px] font-bold uppercase tracking-[.2em] text-blue-200/50">SG-A</div>
+      <a href="{% url 'horaire_list' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'horaire_list' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-calendar-alt w-5"></i>Horaires par promotion</a>
       <a href="{% url 'manage_personnel' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'manage_personnel' or url_name == 'edit_personnel' or url_name == 'delete_personnel' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-users w-5"></i>Gestion du personnel</a>
       <a href="{% url 'manage_students' %}" class="flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition {% if url_name == 'manage_students' or url_name == 'edit_student' or url_name == 'delete_student' %}bg-blue-500 text-white shadow-lg{% else %}text-blue-100/75 hover:bg-white/10 hover:text-white{% endif %}"><i class="fa-solid fa-user-graduate w-5"></i>Étudiants</a>
       {% endif %}

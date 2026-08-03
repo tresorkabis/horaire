@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Détails de l'emploi du temps · ESFORCA{% endblock %}
+{% block page_name %}Détails de l'emploi du temps{% endblock %}
+
+{% block content %}
+    <div class="flex flex-col gap-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900">Horaire de {{ horaire.get_type_horaire_display }} {{ horaire.titre }}</h1>
+            <p class="text-sm text-slate-500">{{ horaire.promotion.designation }} {{ horaire.promotion.filiere.nom_filiere }} {{ horaire.promotion.annee_academique }}</p>
+            <p class="text-sm text-slate-500 mt-1">
+                <span class="rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider {% if horaire.status == 'PUBLISHED' %}bg-emerald-100 text-emerald-700{% elif horaire.status == 'CONFIRMED' %}bg-blue-100 text-blue-700{% else %}bg-amber-100 text-amber-700{% endif %}">
+                    {{ horaire.get_status_display }}
+                </span>
+            </p>
+        </div>
+        <a href="{% url 'horaire_list' %}" class="flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-200">
+            <i class="fa-solid fa-arrow-left"></i> Retour à la liste
+        </a>
+    </div>
+
+    {% if horaire.type_horaire == 'COURS' %}
+    <div class="rounded-3xl border border-slate-200/70 bg-white p-8 shadow-card">
+        <h3 class="text-lg font-bold text-slate-900 mb-4">Emploi du temps par jour</h3>
+        <p class="text-sm text-slate-500 mb-6">Répartition des cours par jour de la semaine.</p>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-400">
+                    <tr>
+                        <th class="px-4 py-3">Heure</th>
+                        {% for jour in jours_semaine %}
+                        <th class="px-4 py-3">{{ jour.0 }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <tr class="hover:bg-brand-50/30">
+                        <td class="px-4 py-3">
+                            <p class="text-sm font-semibold text-slate-700">08:00 à 11:20</p>
+                        </td>
+                        {% for jour in jours_semaine %}
+                        {% with jour_nom=jour.0 %}
+                        <td class="px-4 py-3">
+                            {% for creneau in horaire.creneaux.all %}
+                                {% if creneau.jours == jour_nom and creneau.heure == "08:00:00" %}
+                                <div class="rounded-lg bg-violet-50 p-3">
+                                    <p class="text-sm font-semibold text-violet-700">{{ creneau.cours.titre }}</p>
+                                    <p class="text-xs text-violet-500">{{ creneau.personnel.nom }} {{ creneau.personnel.post_nom }}</p>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                            {% if not horaire.creneaux.all %}
+                            <div class="rounded-lg bg-slate-50 p-3">
+                                <p class="text-sm text-slate-400">—</p>
+                            </div>
+                            {% endif %}
+                        </td>
+                        {% endwith %}
+                        {% endfor %}
+                    </tr>
+                    <tr class="hover:bg-brand-50/30">
+                        <td class="px-4 py-3">
+                            <p class="text-sm font-semibold text-slate-700">11:40 à 15:00</p>
+                        </td>
+                        {% for jour in jours_semaine %}
+                        {% with jour_nom=jour.0 %}
+                        <td class="px-4 py-3">
+                            {% for creneau in horaire.creneaux.all %}
+                                {% if creneau.jours == jour_nom and creneau.heure == "11:40:00" %}
+                                <div class="rounded-lg bg-violet-50 p-3">
+                                    <p class="text-sm font-semibold text-violet-700">{{ creneau.cours.titre }}</p>
+                                    <p class="text-xs text-violet-500">{{ creneau.personnel.nom }} {{ creneau.personnel.post_nom }}</p>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                            {% if not horaire.creneaux.all %}
+                            <div class="rounded-lg bg-slate-50 p-3">
+                                <p class="text-sm text-slate-400">—</p>
+                            </div>
+                            {% endif %}
+                        </td>
+                        {% endwith %}
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Édition de l'emploi du temps · ESFORCA{% endblock %}
+{% block page_name %}Édition de l'emploi du temps{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900">Horaire de {{ horaire.get_type_horaire_display }} {{ horaire.titre }}</h1>
+            <p class="text-sm text-slate-500">{{ horaire.promotion.designation }} {{ horaire.promotion.filiere.nom_filiere }} {{ horaire.promotion.annee_academique }}</p>
+        </div>
+        <a href="{% url 'horaire_list' %}" class="flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-200">
+            <i class="fa-solid fa-arrow-left"></i> Retour à la liste
+        </a>
+    </div>
+
+    <div class="rounded-3xl border border-slate-200/70 bg-white p-8 shadow-card">
+        <form method="post" class="flex flex-col gap-6">
+            {% csrf_token %}
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label for="{{ form.titre.id_for_label }}" class="block text-xs font-bold text-slate-500 mb-2">Titre</label>
+                    {{ form.titre }}
+                </div>
+                <div>
+                    <label for="{{ form.promotion.id_for_label }}" class="block text-xs font-bold text-slate-500 mb-2">Promotion</label>
+                    {{ form.promotion }}
+                </div>
+                <div>
+                    <label for="{{ form.type_horaire.id_for_label }}" class="block text-xs font-bold text-slate-500 mb-2">Type</label>
+                    {{ form.type_horaire }}
+                </div>
+                <div>
+                    <label for="{{ form.status.id_for_label }}" class="block text-xs font-bold text-slate-500 mb-2">Statut</label>
+                    {{ form.status }}
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end gap-3">
+                <a href="{% url 'horaire_list' %}" class="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50">
+                    Annuler
+                </a>
+                <button type="submit" class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-brand-700 shadow-lg shadow-blue-950/20">
+                    <i class="fa-solid fa-save mr-2"></i> Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="rounded-3xl border border-slate-200/70 bg-white p-8 shadow-card">
+        <h3 class="text-lg font-bold text-slate-900 mb-4">Créneaux associés</h3>
+        <p class="text-sm text-slate-500 mb-6">Les créneaux horaires associés à cet emploi du temps.</p>
+
+        {% if horaire.creneaux.exists %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-400">
+                    <tr>
+                        <th class="px-4 py-3">Cours</th>
+                        <th class="px-4 py-3">Enseignant</th>
+                        <th class="px-4 py-3">Jour/Date</th>
+                        <th class="px-4 py-3">Heure</th>
+                        <th class="px-4 py-3">Statut</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for creneau in horaire.creneaux.all %}
+                    <tr class="hover:bg-brand-50/30">
+                        <td class="px-4 py-3">
+                            <p class="text-sm font-semibold text-slate-700">{{ creneau.cours.titre }}</p>
+                            <p class="text-xs text-slate-400">{{ creneau.cours.duree }} min</p>
+                        </td>
+                        <td class="px-4 py-3">
+                            <p class="text-sm font-semibold text-slate-700">{{ creneau.personnel.nom }} {{ creneau.personnel.post_nom }}</p>
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if creneau.date %}
+                            <p class="text-sm font-semibold text-slate-700">{{ creneau.date|date:"d/m/Y" }}</p>
+                            {% else %}
+                            <p class="text-sm font-semibold text-slate-700">{{ creneau.jours }}</p>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3">
+                            <p class="text-sm font-semibold text-slate-700">{{ creneau.heure|time:"H:i" }}</p>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider {% if creneau.status == 'PUBLISHED' %}bg-emerald-100 text-emerald-700{% elif creneau.status == 'CONFIRMED' %}bg-blue-100 text-blue-700{% else %}bg-amber-100 text-amber-700{% endif %}">
+                                {{ creneau.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="py-8 text-center">
+            <i class="fa-regular fa-calendar-xmark text-4xl text-slate-200 mb-4"></i>
+            <h4 class="text-lg font-bold text-slate-900">Aucun créneau associé</h4>
+            <p class="text-sm text-slate-500 mt-1">Cet emploi du temps ne contient aucun créneau horaire.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -11,6 +11,7 @@ urlpatterns = [
     path('schedules/edit/<int:pk>/', views.edit_schedule, name='edit_schedule'),
     path('schedules/publish/<int:pk>/', views.publish_schedule, name='publish_schedule'),
     path('schedules/confirm/<int:pk>/', views.confirm_schedule, name='confirm_schedule'),
+    path('schedules/bulk-confirm/', views.bulk_confirm_schedules, name='bulk_confirm_schedules'),
     path('schedules/annotate/<int:pk>/', views.annotate_schedule, name='annotate_schedule'),
     path('availability/', views.submit_availability, name='submit_availability'),
     path('availability/delete/<int:pk>/', views.delete_availability, name='delete_availability'),
@@ -25,5 +26,7 @@ urlpatterns = [
     path('students/<int:pk>/edit/', views.manage_students, name='edit_student'),
     path('students/<int:pk>/delete/', views.delete_student, name='delete_student'),
     path('horaires/', views.horaire_list, name='horaire_list'),
+    path('horaires/<int:pk>/', views.view_horaire, name='view_horaire'),
+    path('horaires/<int:pk>/edit/', views.edit_horaire, name='edit_horaire'),
     path('propositions/', views.propositions_list, name='propositions_list'),
 ]

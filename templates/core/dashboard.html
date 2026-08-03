@@ -14,6 +14,11 @@
     <a href="{% url 'create_schedule' %}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-600 transition hover:-translate-y-0.5 hover:bg-slate-50"><i class="fa-solid fa-plus"></i>Créer un créneau</a>
   </div>
   {% endif %}
+  {% if is_sga %}
+  <div class="flex gap-3">
+    <a href="{% url 'schedule_list' %}?status=PROPOSED" class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-green-200 transition hover:-translate-y-0.5 hover:bg-emerald-700"><i class="fa-solid fa-check-double"></i>Valider les propositions</a>
+  </div>
+  {% endif %}
   {% if is_enseignant %}
   <div class="flex gap-3">
     <a href="{% url 'submit_availability' %}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-brand-700"><i class="fa-regular fa-clock"></i>Mes disponibilités</a>

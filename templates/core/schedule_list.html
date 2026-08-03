@@ -1,5 +1,40 @@
 {% extends 'base.html' %}
 {% block title %}Gestion des horaires · ESFORCA{% endblock %}
+
+{% block extra_js %}
+{% if is_sga %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Sélectionner tous les éléments
+    const selectAllCheckbox = document.getElementById('select-all');
+    const creneauCheckboxes = document.querySelectorAll('.creneau-checkbox');
+    const bulkConfirmButton = document.getElementById('bulk-confirm-button');
+
+    // Gérer la sélection/désélection de tous
+    selectAllCheckbox.addEventListener('change', function() {
+        creneauCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+        updateBulkConfirmButton();
+    });
+
+    // Gérer la sélection individuelle
+    creneauCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateBulkConfirmButton);
+    });
+
+    // Mettre à jour l'état du bouton de confirmation en masse
+    function updateBulkConfirmButton() {
+        const checkedCheckboxes = document.querySelectorAll('.creneau-checkbox:checked');
+        bulkConfirmButton.disabled = checkedCheckboxes.length === 0;
+    }
+
+    // Initialiser l'état du bouton
+    updateBulkConfirmButton();
+});
+</script>
+{% endif %}
+{% endblock %}
 {% block page_name %}Gestion des horaires{% endblock %}
 {% block content %}
 <div class="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -50,23 +85,38 @@
 </section>
 
 <!-- Tableau -->
+{% if is_sga %}
+<form method="post" action="{% url 'bulk_confirm_schedules' %}" id="bulk-confirm-form">
+  {% csrf_token %}
+{% endif %}
 <section class="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-card">
   {% if horaires %}
   <div class="overflow-x-auto">
     <table class="w-full min-w-[760px] text-left text-sm">
-      <thead class="bg-slate-50 text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-400">
-        <tr>
-          <th class="px-5 py-4">Cours</th>
-          <th class="px-5 py-4">Enseignant</th>
-          <th class="px-5 py-4">Planification</th>
-          <th class="px-5 py-4">Promotion</th>
-          <th class="px-5 py-4">Statut</th>
-          <th class="px-5 py-4 text-right">Actions</th>
-        </tr>
-      </thead>
+                <thead class="bg-slate-50 text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-400">
+                    <tr>
+                        {% if is_sga %}
+                        <th class="px-5 py-4">
+                            <input type="checkbox" id="select-all" class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                        </th>
+                        {% endif %}
+                        <th class="px-5 py-4">Cours</th>
+                        <th class="px-5 py-4">Enseignant</th>
+                        <th class="px-5 py-4">Planification</th>
+                        <th class="px-5 py-4">Promotion</th>
+                        <th class="px-5 py-4">Statut</th>
+                        <th class="px-5 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
       <tbody class="divide-y divide-slate-100">
         {% for h in horaires %}
         <tr class="hover:bg-brand-50/30">
+          <!-- Sélection (uniquement pour SGA) -->
+          {% if is_sga %}
+          <td class="px-5 py-4">
+            <input type="checkbox" name="select_creneaux" value="{{ h.pk }}" class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 creneau-checkbox">
+          </td>
+          {% endif %}
           <!-- Cours -->
           <td class="px-5 py-4">
             <div class="flex items-center gap-3">
@@ -129,6 +179,14 @@
   </div>
   {% endif %}
 </section>
+{% if is_sga %}
+</form>
+<div class="mt-4">
+  <button type="submit" form="bulk-confirm-form" id="bulk-confirm-button" class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-green-200 hover:bg-emerald-700 disabled:bg-emerald-200 disabled:cursor-not-allowed" disabled>
+    <i class="fa-solid fa-check-double mr-2"></i>Confirmer la sélection
+  </button>
+</div>
+{% endif %}
 
 <!-- Pagination -->
 {% if horaires.has_other_pages %}

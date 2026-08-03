@@ -221,9 +221,11 @@ def schedule_list(request):
         "cours", "personnel", "horaire__promotion__filiere"
     )
 
-    # Priorité à l'enseignant : si l'utilisateur est enseignant et a un profil personnel,
-    # on filtre par ses créneaux, même s'il a aussi un autre rôle (chef, SGA).
-    if user.is_enseignant and hasattr(request.user, "personnel"):
+    # Priorité au SGA : le SGA voit tous les créneaux pour validation
+    if user.is_sga:
+        context["is_sga"] = True
+        # Le SGA voit tous les créneaux sans filtration
+    elif user.is_enseignant and hasattr(request.user, "personnel"):
         context["is_enseignant"] = True
         horaires = horaires.filter(personnel=request.user.personnel)
     elif user.is_chef:
@@ -231,8 +233,6 @@ def schedule_list(request):
         # Le chef de filière ne voit que les créneaux de ses propres promotions
         # Filtrer par la filière Génie Logiciel (filière du chef)
         horaires = horaires.filter(horaire__promotion__filiere__nom_filiere="Génie Logiciel")
-    elif user.is_sga:
-        context["is_sga"] = True
     elif user.is_etudiant:
         context["is_etudiant"] = True
         # Filtrer par promotion si l'étudiant est connecté
@@ -378,46 +378,80 @@ def edit_schedule(request, pk=None):
 @role_required(ROLE_CHEF)
 def publish_schedule(request, pk):
     """
-    Publication d'un Horaire global (ensemble de créneaux).
-    
-    Un Horaire est un conteneur validé qui peut être publié.
-    Seul un Horaire CONFIRMED par le SGA peut être publié.
+    Publication d'un créneau horaire individuel.
+
+    Un créneau confirmé par le SGA peut être publié.
     """
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
-    
-    horaire = get_object_or_404(Horaire, pk=pk)
-    
-    if horaire.status != STATUS_CONFIRMED:
-        messages.error(request, "Seul un emploi du temps confirmé par le SGA peut être publié.")
+
+    creneau = get_object_or_404(Creneau_Horaire, pk=pk)
+
+    if creneau.status != STATUS_CONFIRMED:
+        messages.error(request, "Seul un créneau confirmé par le SGA peut être publié.")
     else:
-        horaire.status = STATUS_PUBLISHED
-        horaire.save()
-        messages.success(request, "L'emploi du temps a été publié officiellement.")
-    
-    return redirect("horaire_list")
+        creneau.status = STATUS_PUBLISHED
+        creneau.save()
+        messages.success(request, "Le créneau a été publié officiellement.")
+
+    return redirect("schedule_list")
 
 
 @role_required(ROLE_SGA)
 def confirm_schedule(request, pk):
     """
-    Confirmation d'un Horaire global par le SG-A.
-    
-    Le SG-A confirme l'ensemble des créneaux regroupés dans l'Horaire.
+    Confirmation d'un créneau horaire individuel par le SG-A.
+
+    Le SG-A confirme un créneau proposé par un enseignant.
     """
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
-    
-    horaire = get_object_or_404(Horaire, pk=pk)
-    
-    if horaire.status != STATUS_PROPOSED:
-        messages.error(request, "Seul un emploi du temps proposé peut être confirmé.")
+
+    creneau = get_object_or_404(Creneau_Horaire, pk=pk)
+
+    if creneau.status != STATUS_PROPOSED:
+        messages.error(request, "Seul un créneau proposé peut être confirmé.")
     else:
-        horaire.status = STATUS_CONFIRMED
-        horaire.save()
-        messages.success(request, "L'emploi du temps a été confirmé par le SGA.")
-        
-    return redirect("horaire_list")
+        creneau.status = STATUS_CONFIRMED
+        creneau.save()
+        messages.success(request, "Le créneau a été confirmé par le SGA.")
+
+    return redirect("schedule_list")
+
+@role_required(ROLE_SGA)
+def bulk_confirm_schedules(request):
+    """
+    Confirmation en masse de plusieurs créneaux horaires par le SG-A.
+
+    Le SG-A peut sélectionner plusieurs créneaux proposés et les confirmer en une seule opération.
+    """
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    # Récupérer les IDs des créneaux sélectionnés
+    creneau_ids = request.POST.getlist('select_creneaux')
+    if not creneau_ids:
+        messages.error(request, "Aucun créneau sélectionné.")
+        return redirect("schedule_list")
+
+    # Confirmer chaque créneau sélectionné
+    confirmed_count = 0
+    for creneau_id in creneau_ids:
+        try:
+            creneau = Creneau_Horaire.objects.get(pk=creneau_id)
+            if creneau.status == STATUS_PROPOSED:
+                creneau.status = STATUS_CONFIRMED
+                creneau.save()
+                confirmed_count += 1
+        except Creneau_Horaire.DoesNotExist:
+            continue
+
+    if confirmed_count > 0:
+        messages.success(request, f"{confirmed_count} créneau(x) confirmé(s) avec succès par le SGA.")
+    else:
+        messages.error(request, "Aucun créneau valide à confirmer.")
+
+    return redirect("schedule_list")
 
 
 # ---------------------------------------------------------------------------
@@ -693,22 +727,25 @@ def horaire_list(request):
     """Liste des emplois du temps globaux (objets Horaire), filtrés par type."""
     user = request.user
     type_filtre = request.GET.get("type", TYPE_COURS)
-    
+
     # Valider le type
     if type_filtre not in (TYPE_COURS, TYPE_EXAMEN):
         type_filtre = TYPE_COURS
-    
+
     horaires = Horaire.objects.filter(type_horaire=type_filtre).select_related(
         "promotion__filiere"
     )
-    
+
     if user.is_chef:
         # Le chef ne voit que les horaires de sa filière (Génie Logiciel)
         horaires = horaires.filter(promotion__filiere__nom_filiere="Génie Logiciel")
 
+    # Ajouter les rôles au contexte pour le template
     context = {
         "horaires": horaires,
         "user_roles": _roles(user),
+        "is_sga": user.is_sga,
+        "is_chef": user.is_chef,
         "type_filtre": type_filtre,
         "TYPE_COURS": TYPE_COURS,
         "TYPE_EXAMEN": TYPE_EXAMEN,
@@ -730,9 +767,40 @@ def create_horaire(request):
             return redirect("horaire_list")
     else:
         form = HoraireForm()
-    
+
     return render(request, "core/create_horaire.html", {
         "form": form,
+        "user_roles": _roles(request.user),
+    })
+
+@role_required(ROLE_CHEF, ROLE_SGA)
+def view_horaire(request, pk):
+    """Affichage des détails d'un horaire global (Chef de Filière et SGA)."""
+    from .models import JOURS_CHOICES
+    horaire = get_object_or_404(Horaire, pk=pk)
+    return render(request, "core/view_horaire.html", {
+        "horaire": horaire,
+        "user_roles": _roles(request.user),
+        "jours_semaine": JOURS_CHOICES,
+    })
+
+@role_required(ROLE_CHEF)
+def edit_horaire(request, pk):
+    """Édition d'un horaire global (Chef de Filière)."""
+    horaire = get_object_or_404(Horaire, pk=pk)
+
+    if request.method == "POST":
+        form = HoraireForm(request.POST, instance=horaire)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Emploi du temps mis à jour avec succès.")
+            return redirect("horaire_list")
+    else:
+        form = HoraireForm(instance=horaire)
+
+    return render(request, "core/edit_horaire.html", {
+        "form": form,
+        "horaire": horaire,
         "user_roles": _roles(request.user),
     })
 

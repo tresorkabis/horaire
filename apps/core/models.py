@@ -327,8 +327,8 @@ class Horaire(models.Model):
         help_text="Type d'horaire : Cours ou Examen",
     )
     status = models.CharField(
-        max_length=20, 
-        choices=STATUS_CHOICES, 
+        max_length=20,
+        choices=STATUS_CHOICES,
         default=STATUS_DRAFT
     )
     date_creation = models.DateTimeField(auto_now_add=True)
@@ -340,6 +340,10 @@ class Horaire(models.Model):
 
     def __str__(self):
         return f"{self.titre} - {self.promotion}"
+
+    def get_creneau_for_jour_heure(self, jour, heure):
+        """Retourne le créneau pour un jour et une heure donnés, ou None."""
+        return self.creneaux.filter(jours=jour, heure=heure).first()
 
 
 # ---------------------------------------------------------------------------
