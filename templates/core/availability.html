@@ -5,18 +5,15 @@
 
 {% block content %}
 <div class="max-w-5xl mx-auto">
-  <div class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-    <div>
-      <a href="{% url 'dashboard' %}" class="mb-3 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-brand-600">
-        <i class="fa-solid fa-arrow-left"></i> Retour au tableau de bord
-      </a>
-      <h1 class="font-display text-3xl font-extrabold text-slate-950">Mes disponibilités</h1>
-      <p class="mt-1 text-sm text-slate-500">Indiquez vos créneaux libres pour faciliter la planification.</p>
-    </div>
-    <button onclick="addRow()" class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-brand-700">
-      <i class="fa-solid fa-plus"></i> Ajouter un créneau
-    </button>
+<div class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+  <div>
+    <a href="{% url 'dashboard' %}" class="mb-3 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-brand-600">
+      <i class="fa-solid fa-arrow-left"></i> Retour au tableau de bord
+    </a>
+    <h1 class="font-display text-3xl font-extrabold text-slate-950">Mes disponibilités</h1>
+    <p class="mt-1 text-sm text-slate-500">Indiquez vos créneaux libres pour faciliter la planification.</p>
   </div>
+</div>
 
   <!-- Disponibilités existantes -->
   {% if disponibilites %}
@@ -70,7 +67,7 @@
       <h2 class="font-display text-lg font-extrabold text-slate-950">Ajouter de nouveaux créneaux</h2>
       <p class="mt-1 text-xs text-slate-400">Renseignez vos disponibilités hebdomadaires</p>
     </header>
-    <form method="POST">
+    <form method="POST" onsubmit="return validateForm()">
       {% csrf_token %}
       <div class="overflow-x-auto">
         <table class="w-full min-w-[600px] text-left text-sm">
@@ -86,7 +83,7 @@
           <tbody id="availability-body" class="divide-y divide-slate-100">
             <tr>
               <td class="px-6 py-4">
-                <select name="jour[]" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500">
+                <select name="jour[]" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500" required>
                   <option value="Lundi">Lundi</option>
                   <option value="Mardi">Mardi</option>
                   <option value="Mercredi">Mercredi</option>
@@ -96,16 +93,16 @@
                 </select>
               </td>
               <td class="px-6 py-4">
-                <input type="time" name="debut[]" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500">
+                <input type="time" name="debut[]" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500" required>
               </td>
               <td class="px-6 py-4">
-                <input type="time" name="fin[]" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500">
+                <input type="time" name="fin[]" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500" required>
               </td>
               <td class="px-6 py-4">
                 <input type="text" name="note[]" placeholder="Ex: Sauf imprévu" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500">
               </td>
               <td class="px-6 py-4 text-right">
-                <button type="button" onclick="removeRow(this)" class="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-600 hover:bg-red-100">
+                <button type="button" onclick="removeRow(this)" class="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-600 hover:bg-red-100" title="Supprimer">
                   <i class="fa-solid fa-trash text-xs"></i>
                 </button>
               </td>
@@ -113,7 +110,10 @@
           </tbody>
         </table>
       </div>
-      <div class="flex justify-end border-t border-slate-100 bg-slate-50/80 p-6">
+      <div class="flex items-center justify-between border-t border-slate-100 bg-slate-50/80 p-6">
+        <button type="button" onclick="addRow()" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-brand-700">
+          <i class="fa-solid fa-plus"></i> Ajouter un créneau
+        </button>
         <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-brand-700">
           <i class="fa-solid fa-paper-plane"></i> Enregistrer mes disponibilités
         </button>
@@ -130,13 +130,29 @@
 </div>
 
 <script>
+  // Compteur pour les nouvelles lignes
+  let rowCounter = 1;
+
   function addRow() {
     const body = document.getElementById('availability-body');
     const newRow = body.rows[0].cloneNode(true);
-    const inputs = newRow.querySelectorAll('input');
-    inputs.forEach(input => input.value = '');
-    const selects = newRow.querySelectorAll('select');
-    selects.forEach(select => select.selectedIndex = 0);
+    rowCounter++;
+
+    // Mettre à jour les noms des champs pour la nouvelle ligne
+    const inputs = newRow.querySelectorAll('input, select');
+    inputs.forEach(input => {
+      if (input.name.endsWith('[]')) {
+        // Garder le nom original pour les champs existants
+        input.name = input.name;
+      }
+      if (input.tagName === 'INPUT' && input.type !== 'time') {
+        input.value = '';
+      }
+      if (input.tagName === 'SELECT') {
+        input.selectedIndex = 0;
+      }
+    });
+
     body.appendChild(newRow);
   }
 
@@ -145,6 +161,32 @@
     if (body.rows.length > 1) {
       button.closest('tr').remove();
     }
+  }
+
+  function validateForm() {
+    const body = document.getElementById('availability-body');
+    const rows = body.rows;
+    let isValid = true;
+    let errorMessage = '';
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const startTime = row.querySelector('input[name="debut[]"]').value;
+      const endTime = row.querySelector('input[name="fin[]"]').value;
+
+      if (startTime && endTime && startTime >= endTime) {
+        isValid = false;
+        errorMessage = 'L\'heure de fin doit être postérieure à l\'heure de début pour tous les créneaux.';
+        break;
+      }
+    }
+
+    if (!isValid) {
+      alert(errorMessage);
+      return false;
+    }
+
+    return true;
   }
 </script>
 {% endblock %}

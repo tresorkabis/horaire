@@ -29,4 +29,6 @@ urlpatterns = [
     path('horaires/<int:pk>/', views.view_horaire, name='view_horaire'),
     path('horaires/<int:pk>/edit/', views.edit_horaire, name='edit_horaire'),
     path('propositions/', views.propositions_list, name='propositions_list'),
+    path('promotions/<int:promotion_id>/generate-horaires/', views.generate_promotion_horaires, name='generate_promotion_horaires'),
+    path('promotions/<int:promotion_id>/regenerate-horaires/', views.regenerate_promotion_horaires, name='regenerate_promotion_horaires'),
 ]

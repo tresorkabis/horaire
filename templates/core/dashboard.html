@@ -465,7 +465,9 @@
       <h2 class="font-display text-lg font-extrabold text-slate-950">Planification académique</h2>
       <p class="mt-1 text-xs text-slate-400">Suivi du workflow de validation des horaires</p>
     </div>
+    {% if is_chef or is_sga %}
     <a href="{% url 'schedule_list' %}" class="text-sm font-bold text-brand-600 hover:text-brand-700">Voir tous les horaires <i class="fa-solid fa-arrow-right ml-2"></i></a>
+    {% endif %}
   </header>
   {% if horaires %}
   <div class="overflow-x-auto">

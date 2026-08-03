@@ -248,7 +248,7 @@ def schedule_list(request):
         context["is_etudiant"] = True
         # Filtrer par promotion si l'étudiant est connecté
         if hasattr(request.user, "etudiant") and request.user.etudiant.promotion:
-            horaires = horaires.filter(status="PUBLISHED", promotions=request.user.etudiant.promotion)
+            horaires = horaires.filter(status="PUBLISHED", horaire__promotion=request.user.etudiant.promotion)
         else:
             horaires = horaires.filter(status="PUBLISHED")
     else:
@@ -262,7 +262,7 @@ def schedule_list(request):
     # Filtrage par promotion
     promotion_id = request.GET.get("promotion", "")
     if promotion_id and promotion_id.isdigit():
-        horaires = horaires.filter(promotions__id_prom=promotion_id)
+        horaires = horaires.filter(horaire__promotion__id_prom=promotion_id)
 
     # Recherche par mot-clé
     search = request.GET.get("q", "").strip()
@@ -735,7 +735,7 @@ def delete_student(request, pk):
 
 @role_required(ROLE_CHEF, ROLE_SGA)
 def horaire_list(request):
-    """Liste des emplois du temps globaux (objets Horaire), filtrés par type."""
+    """Liste des emplois du temps globaux (objets Horaire), filtrés par type et promotion."""
     user = request.user
     type_filtre = request.GET.get("type", TYPE_COURS)
 
@@ -751,6 +751,16 @@ def horaire_list(request):
         # Le chef ne voit que les horaires de sa filière (Génie Logiciel)
         horaires = horaires.filter(promotion__filiere__nom_filiere="Génie Logiciel")
 
+    # Filtrage par promotion
+    promotion_id = request.GET.get("promotion", "")
+    if promotion_id and promotion_id.isdigit():
+        horaires = horaires.filter(promotion__id_prom=promotion_id)
+
+    # Récupérer toutes les promotions pour le filtre (uniquement Génie Logiciel pour le chef)
+    promotions = Promotion.objects.all().order_by("filiere__nom_filiere", "designation")
+    if user.is_chef:
+        promotions = promotions.filter(filiere__nom_filiere="Génie Logiciel")
+
     # Ajouter les rôles au contexte pour le template
     context = {
         "horaires": horaires,
@@ -760,6 +770,8 @@ def horaire_list(request):
         "type_filtre": type_filtre,
         "TYPE_COURS": TYPE_COURS,
         "TYPE_EXAMEN": TYPE_EXAMEN,
+        "promotions": promotions,
+        "active_promotion": promotion_id,
     }
     return render(request, "core/horaire_list.html", context)
 
@@ -828,12 +840,151 @@ def edit_horaire(request, pk):
 def propositions_list(request):
     """Liste des créneaux proposés par les enseignants non encore affectés."""
     propositions = Creneau_Horaire.objects.filter(
-        status=STATUS_PROPOSED, 
+        status=STATUS_PROPOSED,
         horaire__isnull=True
     ).select_related("cours", "personnel")
-    
+
     context = {
         "propositions": propositions,
         "user_roles": _roles(request.user),
     }
     return render(request, "core/propositions_list.html", context)
+
+@role_required(ROLE_CHEF)
+def generate_promotion_horaires(request, promotion_id):
+    """
+    Génération des horaires de cours et d'examens pour une promotion.
+    Crée uniquement les horaires manquants (2 horaires de cours et 4 horaires d'examens).
+    """
+    promotion = get_object_or_404(Promotion, pk=promotion_id)
+
+    # Vérifier que la promotion appartient à la filière du chef (Génie Logiciel)
+    if promotion.filiere.nom_filiere != "Génie Logiciel":
+        messages.error(request, "Vous ne pouvez générer des horaires que pour les promotions de Génie Logiciel.")
+        return redirect("manage_referentiel", type_objet="promotions")
+
+    current_year = datetime.date.today().year
+    horaires_crees = 0
+
+    # Générer les horaires de cours manquants
+    cours_s1, created = Horaire.objects.get_or_create(
+        promotion=promotion,
+        titre=f"Semestre 1 - {current_year}",
+        defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_COURS}
+    )
+    if created:
+        horaires_crees += 1
+
+    cours_s2, created = Horaire.objects.get_or_create(
+        promotion=promotion,
+        titre=f"Semestre 2 - {current_year}",
+        defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_COURS}
+    )
+    if created:
+        horaires_crees += 1
+
+    # Générer les horaires d'examens manquants
+    exam_s1_session, created = Horaire.objects.get_or_create(
+        promotion=promotion,
+        titre=f"Session Semestre 1 - {current_year}",
+        defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_EXAMEN}
+    )
+    if created:
+        horaires_crees += 1
+
+    exam_s1_rattrapage, created = Horaire.objects.get_or_create(
+        promotion=promotion,
+        titre=f"Rattrapage Semestre 1 - {current_year}",
+        defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_EXAMEN}
+    )
+    if created:
+        horaires_crees += 1
+
+    exam_s2_session, created = Horaire.objects.get_or_create(
+        promotion=promotion,
+        titre=f"Session Semestre 2 - {current_year}",
+        defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_EXAMEN}
+    )
+    if created:
+        horaires_crees += 1
+
+    exam_s2_rattrapage, created = Horaire.objects.get_or_create(
+        promotion=promotion,
+        titre=f"Rattrapage Semestre 2 - {current_year}",
+        defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_EXAMEN}
+    )
+    if created:
+        horaires_crees += 1
+
+    if horaires_crees > 0:
+        messages.success(request, f"{horaires_crees} horaires manquants ont été créés pour la promotion {promotion.designation}.")
+    else:
+        messages.info(request, f"Tous les horaires existent déjà pour la promotion {promotion.designation}.")
+
+    return redirect("manage_referentiel", type_objet="promotions")
+
+@role_required(ROLE_CHEF)
+def regenerate_promotion_horaires(request, promotion_id):
+    """
+    Régénération des horaires de cours et d'examens pour une promotion.
+    Supprime les horaires existants et crée de nouveaux horaires vides.
+    """
+    promotion = get_object_or_404(Promotion, pk=promotion_id)
+
+    # Vérifier que la promotion appartient à la filière du chef (Génie Logiciel)
+    if promotion.filiere.nom_filiere != "Génie Logiciel":
+        messages.error(request, "Vous ne pouvez régénérer des horaires que pour les promotions de Génie Logiciel.")
+        return redirect("manage_referentiel", type_objet="promotions")
+
+    current_year = datetime.date.today().year
+
+    # Supprimer les horaires existants de cette promotion
+    horaires_existants = Horaire.objects.filter(promotion=promotion)
+    horaires_supprimes = horaires_existants.count()
+    horaires_existants.delete()
+
+    # Créer de nouveaux horaires vides
+    Horaire.objects.create(
+        promotion=promotion,
+        titre=f"Semestre 1 - {current_year}",
+        status=STATUS_DRAFT,
+        type_horaire=TYPE_COURS
+    )
+
+    Horaire.objects.create(
+        promotion=promotion,
+        titre=f"Semestre 2 - {current_year}",
+        status=STATUS_DRAFT,
+        type_horaire=TYPE_COURS
+    )
+
+    Horaire.objects.create(
+        promotion=promotion,
+        titre=f"Session Semestre 1 - {current_year}",
+        status=STATUS_DRAFT,
+        type_horaire=TYPE_EXAMEN
+    )
+
+    Horaire.objects.create(
+        promotion=promotion,
+        titre=f"Rattrapage Semestre 1 - {current_year}",
+        status=STATUS_DRAFT,
+        type_horaire=TYPE_EXAMEN
+    )
+
+    Horaire.objects.create(
+        promotion=promotion,
+        titre=f"Session Semestre 2 - {current_year}",
+        status=STATUS_DRAFT,
+        type_horaire=TYPE_EXAMEN
+    )
+
+    Horaire.objects.create(
+        promotion=promotion,
+        titre=f"Rattrapage Semestre 2 - {current_year}",
+        status=STATUS_DRAFT,
+        type_horaire=TYPE_EXAMEN
+    )
+
+    messages.success(request, f"Régénération terminée : {horaires_supprimes} horaires supprimés et 6 nouveaux horaires vides créés pour la promotion {promotion.designation}.")
+    return redirect("manage_referentiel", type_objet="promotions")
