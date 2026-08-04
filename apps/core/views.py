@@ -870,6 +870,8 @@ def propose_horaire(request, pk):
 
     if horaire.status != STATUS_DRAFT:
         messages.error(request, "Seul un horaire en brouillon peut être proposé au SGA.")
+    elif not horaire.creneaux.exists():
+        messages.error(request, f"Impossible de proposer l'horaire « {horaire.titre} » : il ne contient aucun créneau. Ajoutez au moins un créneau avant de le proposer.")
     else:
         horaire.transitionner(STATUS_PROPOSED)
         messages.success(request, f"L'horaire « {horaire.titre} » a été proposé au SGA pour validation.")
@@ -890,6 +892,8 @@ def confirm_horaire(request, pk):
 
     if horaire.status != STATUS_PROPOSED:
         messages.error(request, "Seul un horaire proposé par le Chef de Filière peut être confirmé.")
+    elif not horaire.creneaux.exists():
+        messages.error(request, f"Impossible de confirmer l'horaire « {horaire.titre} » : il ne contient aucun créneau.")
     else:
         horaire.transitionner(STATUS_CONFIRMED)
         messages.success(request, f"L'horaire « {horaire.titre} » a été confirmé par le SGA.")
@@ -910,9 +914,32 @@ def publish_horaire(request, pk):
 
     if horaire.status != STATUS_CONFIRMED:
         messages.error(request, "Seul un horaire confirmé par le SGA peut être publié.")
+    elif not horaire.creneaux.exists():
+        messages.error(request, f"Impossible de publier l'horaire « {horaire.titre} » : il ne contient aucun créneau.")
     else:
         horaire.transitionner(STATUS_PUBLISHED)
         messages.success(request, f"L'horaire « {horaire.titre} » a été publié officiellement.")
+
+    return redirect("horaire_list")
+
+
+@role_required(ROLE_SGA)
+def unpublish_horaire(request, pk):
+    """
+    Dé-publication d'un horaire global par le SG-A.
+    Transition : PUBLISHED → DRAFT
+    Permet de remettre un horaire publié en brouillon pour le modifier.
+    """
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    horaire = get_object_or_404(Horaire, pk=pk)
+
+    if horaire.status != STATUS_PUBLISHED:
+        messages.error(request, "Seul un horaire publié peut être dé-publié.")
+    else:
+        horaire.transitionner(STATUS_DRAFT)
+        messages.success(request, f"L'horaire « {horaire.titre} » a été dé-publié et remis en brouillon. Vous pouvez maintenant le modifier.")
 
     return redirect("horaire_list")
 

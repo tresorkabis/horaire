@@ -31,6 +31,7 @@ urlpatterns = [
     path('horaires/<int:pk>/propose/', views.propose_horaire, name='propose_horaire'),
     path('horaires/<int:pk>/confirm/', views.confirm_horaire, name='confirm_horaire'),
     path('horaires/<int:pk>/publish/', views.publish_horaire, name='publish_horaire'),
+    path('horaires/<int:pk>/unpublish/', views.unpublish_horaire, name='unpublish_horaire'),
     path('propositions/', views.propositions_list, name='propositions_list'),
     path('promotions/<int:promotion_id>/generate-horaires/', views.generate_promotion_horaires, name='generate_promotion_horaires'),
     path('promotions/<int:promotion_id>/regenerate-horaires/', views.regenerate_promotion_horaires, name='regenerate_promotion_horaires'),

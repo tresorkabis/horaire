@@ -171,7 +171,11 @@ def seed():
     c6.enseignant = prof
     c6.save()
 
-    # Chaque promotion a exactement 2 horaires : Semestre 1 et Semestre 2
+    # ------------------------------------------------------------------
+    # Création des horaires globaux
+    # ------------------------------------------------------------------
+
+    # Chaque promotion a exactement 2 horaires de cours : Semestre 1 et Semestre 2
     h_l1_s1, _ = Horaire.objects.get_or_create(promotion=l1_gl, titre="Semestre 1 - 2026", defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_COURS})
     h_l1_s2, _ = Horaire.objects.get_or_create(promotion=l1_gl, titre="Semestre 2 - 2026", defaults={'status': STATUS_PROPOSED, 'type_horaire': TYPE_COURS})
     h_l2_s1, _ = Horaire.objects.get_or_create(promotion=l2_gl, titre="Semestre 1 - 2026", defaults={'status': STATUS_CONFIRMED, 'type_horaire': TYPE_COURS})
@@ -216,29 +220,109 @@ def seed():
     h_sd_s2_session, _ = Horaire.objects.get_or_create(promotion=l1_sd, titre="Session Semestre 2 - 2026", defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_EXAMEN})
     h_sd_s2_rattrapage, _ = Horaire.objects.get_or_create(promotion=l1_sd, titre="Rattrapage Semestre 2 - 2026", defaults={'status': STATUS_DRAFT, 'type_horaire': TYPE_EXAMEN})
 
+    # ------------------------------------------------------------------
+    # Création des créneaux
+    # ------------------------------------------------------------------
+
     Creneau_Horaire.objects.all().delete()
 
+    # --- Horaires de cours ---
+
+    # L1 GL - Semestre 1 (DRAFT) : 2 créneaux
     Creneau_Horaire.objects.get_or_create(jours="Lundi", heure="08:00:00", cours=c1, personnel=chef, horaire=h_l1_s1, status=STATUS_DRAFT)
-    Creneau_Horaire.objects.get_or_create(jours="Mardi", heure="11:40:00", cours=c2, personnel=prof, horaire=h_l1_s2, status=STATUS_PROPOSED)
-    Creneau_Horaire.objects.get_or_create(jours="Jeudi", heure="11:40:00", cours=c3, personnel=prof, horaire=h_l2_s1, status=STATUS_CONFIRMED)
-    Creneau_Horaire.objects.get_or_create(jours="Vendredi", heure="08:00:00", cours=c1, personnel=chef, horaire=h_l1_s1, status=STATUS_PUBLISHED)
-    Creneau_Horaire.objects.get_or_create(jours="Lundi", heure="11:40:00", cours=c4, personnel=prof, horaire=h_sc_s1, status=STATUS_PUBLISHED)
-    Creneau_Horaire.objects.get_or_create(jours="Mardi", heure="08:00:00", cours=c5, personnel=chef, horaire=h_rt_s1, status=STATUS_PUBLISHED)
-    Creneau_Horaire.objects.get_or_create(jours="Mercredi", heure="11:40:00", cours=c6, personnel=prof, horaire=h_sd_s1, status=STATUS_PUBLISHED)
-    # Ajouter les nouveaux cours (3 par semestre)
     Creneau_Horaire.objects.get_or_create(jours="Mercredi", heure="08:00:00", cours=c7, personnel=chef, horaire=h_l1_s1, status=STATUS_DRAFT)
+
+    # L1 GL - Semestre 2 (PROPOSED) : 2 créneaux
+    Creneau_Horaire.objects.get_or_create(jours="Mardi", heure="11:40:00", cours=c2, personnel=prof, horaire=h_l1_s2, status=STATUS_PROPOSED)
     Creneau_Horaire.objects.get_or_create(jours="Vendredi", heure="11:40:00", cours=c8, personnel=prof, horaire=h_l1_s2, status=STATUS_PROPOSED)
+
+    # L2 GL - Semestre 1 (CONFIRMED) : 2 créneaux
+    Creneau_Horaire.objects.get_or_create(jours="Jeudi", heure="11:40:00", cours=c3, personnel=prof, horaire=h_l2_s1, status=STATUS_CONFIRMED)
     Creneau_Horaire.objects.get_or_create(jours="Samedi", heure="08:00:00", cours=c9, personnel=prof, horaire=h_l2_s1, status=STATUS_CONFIRMED)
+
+    # L2 GL - Semestre 2 (CONFIRMED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Vendredi", heure="08:00:00", cours=c3, personnel=prof, horaire=h_l2_s2, status=STATUS_CONFIRMED)
+
+    # L3 GL - Semestre 1 (PUBLISHED) : 3 créneaux
     Creneau_Horaire.objects.get_or_create(jours="Lundi", heure="11:40:00", cours=c7, personnel=chef, horaire=h_l3_s1, status=STATUS_PUBLISHED)
-    Creneau_Horaire.objects.get_or_create(jours="Samedi", heure="11:40:00", cours=c8, personnel=prof, horaire=h_l3_s1, status=STATUS_PUBLISHED)
-    Creneau_Horaire.objects.get_or_create(jours="Jeudi", heure="08:00:00", cours=c9, personnel=prof, horaire=h_l3_s1, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(jours="Samedi", heure="11:40:00", cours=c8, personnel=prof3, horaire=h_l3_s1, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(jours="Jeudi", heure="08:00:00", cours=c9, personnel=prof3, horaire=h_l3_s1, status=STATUS_PUBLISHED)
 
-    Creneau_Horaire.objects.get_or_create(jours="Mercredi", heure="11:40:00", cours=c1, personnel=chef, horaire=h_gl_s1_session, status=STATUS_PUBLISHED)
-    Creneau_Horaire.objects.get_or_create(jours="Vendredi", heure="08:00:00", cours=c2, personnel=prof, horaire=h_gl_s1_rattrapage, status=STATUS_PUBLISHED)
-    Creneau_Horaire.objects.get_or_create(jours="Mercredi", heure="08:00:00", cours=c4, personnel=prof, horaire=h_sc_s1_session, status=STATUS_PUBLISHED)
-    Creneau_Horaire.objects.get_or_create(jours="Lundi", heure="08:00:00", cours=c3, personnel=prof, horaire=h_l2_s1_session, status=STATUS_DRAFT)
+    # L3 GL - Semestre 2 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Mardi", heure="08:00:00", cours=c7, personnel=chef, horaire=h_l3_s2, status=STATUS_PUBLISHED)
 
+    # Sciences Commerciales - Semestre 1 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Lundi", heure="11:40:00", cours=c4, personnel=prof2, horaire=h_sc_s1, status=STATUS_PUBLISHED)
+
+    # Sciences Commerciales - Semestre 2 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Mercredi", heure="08:00:00", cours=c4, personnel=prof2, horaire=h_sc_s2, status=STATUS_PUBLISHED)
+
+    # Réseaux - Semestre 1 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Mardi", heure="08:00:00", cours=c5, personnel=chef2, horaire=h_rt_s1, status=STATUS_PUBLISHED)
+
+    # Réseaux - Semestre 2 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Jeudi", heure="08:00:00", cours=c5, personnel=chef2, horaire=h_rt_s2, status=STATUS_PUBLISHED)
+
+    # Secrétariat - Semestre 1 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Mercredi", heure="11:40:00", cours=c6, personnel=prof2, horaire=h_sd_s1, status=STATUS_PUBLISHED)
+
+    # Secrétariat - Semestre 2 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Vendredi", heure="08:00:00", cours=c6, personnel=prof2, horaire=h_sd_s2, status=STATUS_PUBLISHED)
+
+    # --- Horaires d'examens ---
+
+    # L1 GL - Session S1 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Mercredi", heure="11:40:00", cours=c1, personnel=chef3, horaire=h_gl_s1_session, status=STATUS_PUBLISHED)
+
+    # L1 GL - Rattrapage S1 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Vendredi", heure="08:00:00", cours=c2, personnel=prof3, horaire=h_gl_s1_rattrapage, status=STATUS_PUBLISHED)
+
+    # L2 GL - Session S1 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Lundi", heure="08:00:00", cours=c3, personnel=prof3, horaire=h_l2_s1_session, status=STATUS_PUBLISHED)
+
+    # L2 GL - Rattrapage S1 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Jeudi", heure="11:40:00", cours=c8, personnel=prof3, horaire=h_l2_s1_rattrapage, status=STATUS_PUBLISHED)
+
+    # L3 GL - Session S1 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Mardi", heure="11:40:00", cours=c9, personnel=chef3, horaire=h_l3_s1_session, status=STATUS_PUBLISHED)
+
+    # L3 GL - Rattrapage S1 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Jeudi", heure="08:00:00", cours=c7, personnel=chef3, horaire=h_l3_s1_rattrapage, status=STATUS_PUBLISHED)
+
+    # SC - Session S1 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Jeudi", heure="08:00:00", cours=c4, personnel=prof2, horaire=h_sc_s1_session, status=STATUS_PUBLISHED)
+
+    # SC - Rattrapage S1 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Samedi", heure="08:00:00", cours=c4, personnel=prof2, horaire=h_sc_s1_rattrapage, status=STATUS_PUBLISHED)
+
+    # Réseaux - Session S1 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Vendredi", heure="11:40:00", cours=c5, personnel=chef2, horaire=h_rt_s1_session, status=STATUS_PUBLISHED)
+
+    # Réseaux - Rattrapage S1 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Samedi", heure="08:00:00", cours=c5, personnel=chef2, horaire=h_rt_s1_rattrapage, status=STATUS_PUBLISHED)
+
+    # Secrétariat - Session S1 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Mardi", heure="08:00:00", cours=c6, personnel=prof2, horaire=h_sd_s1_session, status=STATUS_PUBLISHED)
+
+    # Secrétariat - Rattrapage S1 (PUBLISHED) : 1 créneau
+    Creneau_Horaire.objects.get_or_create(jours="Jeudi", heure="11:40:00", cours=c6, personnel=prof2, horaire=h_sd_s1_rattrapage, status=STATUS_PUBLISHED)
+
+    # --- Proposition isolée (sans horaire) ---
     Creneau_Horaire.objects.get_or_create(jours="Mardi", heure="08:00:00", cours=c2, personnel=prof, horaire=None, status=STATUS_PROPOSED, annotations="Proposition pour le créneau de Base de Données NoSQL")
+
+    # ------------------------------------------------------------------
+    # Vérification finale : aucun horaire non-DRAFT ne doit être vide
+    # ------------------------------------------------------------------
+
+    horaires_non_draft = Horaire.objects.exclude(status=STATUS_DRAFT)
+    horaires_vides = [h for h in horaires_non_draft if not h.creneaux.exists()]
+    if horaires_vides:
+        print("\n⚠️  ATTENTION : Des horaires non-DRAFT sont vides :")
+        for h in horaires_vides:
+            print(f"  - {h.titre} ({h.promotion}) — statut : {h.status}")
+        print("Le seed est incohérent avec la règle métier.")
+    else:
+        print("\n✅ Vérification : tous les horaires non-DRAFT ont au moins un créneau.")
 
     print("\n" + "=" * 60)
     print("Base de données prête !")

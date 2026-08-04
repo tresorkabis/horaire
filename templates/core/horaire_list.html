@@ -98,6 +98,14 @@
                          </button>
                      </form>
                      {% endif %}
+                     {% if is_sga and h.status == 'PUBLISHED' %}
+                     <form method="post" action="{% url 'unpublish_horaire' h.pk %}" onsubmit="return confirm('Remettre cet horaire en brouillon pour le modifier ?')">
+                         {% csrf_token %}
+                         <button type="submit" class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold text-red-600 transition hover:bg-red-50 border border-red-200" title="Dé-publier pour modification">
+                             <i class="fa-solid fa-rotate-left"></i> Dé-publier
+                         </button>
+                     </form>
+                     {% endif %}
                  </div>
             </div>
         </article>
