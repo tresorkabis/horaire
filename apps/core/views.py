@@ -128,7 +128,13 @@ def dashboard(request):
     related_creneaux = Creneau_Horaire.objects.select_related("cours", "personnel", "horaire")
 
     if user.is_sga:
-        context.update(is_sga=True, horaires=related_creneaux, personnels=Personnel.objects.all())
+        # Le SGA voit tous les horaires globaux pour le suivi du workflow
+        horaires_globaux = Horaire.objects.select_related("promotion__filiere")
+        context.update(
+            is_sga=True,
+            horaires=horaires_globaux,
+            personnels=Personnel.objects.all(),
+        )
     elif user.is_chef:
         # Le Chef de Filière voit :
         # 1. Les propositions de créneaux non encore intégrées à un horaire
@@ -136,9 +142,10 @@ def dashboard(request):
             status=STATUS_PROPOSED, 
             horaire__isnull=True
         )
-        # 2. Les créneaux des horaires qu'il a lui-même créés ou gérés (via ses promotions)
-        # Note: On pourrait filtrer ici par la filière du chef si le modèle le permettait
-        horaires_integres = related_creneaux.filter(horaire__isnull=False)
+        # 2. Les horaires globaux de sa filière (Génie Logiciel)
+        horaires_integres = Horaire.objects.filter(
+            promotion__filiere__nom_filiere="Génie Logiciel"
+        ).select_related("promotion__filiere")
         
         context.update(
             is_chef=True, 
@@ -848,6 +855,66 @@ def edit_horaire(request, pk):
         "horaire": horaire,
         "user_roles": _roles(request.user),
     })
+
+
+@role_required(ROLE_CHEF)
+def propose_horaire(request, pk):
+    """
+    Proposition d'un horaire global au SGA (Chef de Filière).
+    Transition : DRAFT → PROPOSED
+    """
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    horaire = get_object_or_404(Horaire, pk=pk)
+
+    if horaire.status != STATUS_DRAFT:
+        messages.error(request, "Seul un horaire en brouillon peut être proposé au SGA.")
+    else:
+        horaire.transitionner(STATUS_PROPOSED)
+        messages.success(request, f"L'horaire « {horaire.titre} » a été proposé au SGA pour validation.")
+
+    return redirect("horaire_list")
+
+
+@role_required(ROLE_SGA)
+def confirm_horaire(request, pk):
+    """
+    Confirmation d'un horaire global par le SG-A.
+    Transition : PROPOSED → CONFIRMED
+    """
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    horaire = get_object_or_404(Horaire, pk=pk)
+
+    if horaire.status != STATUS_PROPOSED:
+        messages.error(request, "Seul un horaire proposé par le Chef de Filière peut être confirmé.")
+    else:
+        horaire.transitionner(STATUS_CONFIRMED)
+        messages.success(request, f"L'horaire « {horaire.titre} » a été confirmé par le SGA.")
+
+    return redirect("horaire_list")
+
+
+@role_required(ROLE_CHEF)
+def publish_horaire(request, pk):
+    """
+    Publication d'un horaire global (Chef de Filière).
+    Transition : CONFIRMED → PUBLISHED
+    """
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    horaire = get_object_or_404(Horaire, pk=pk)
+
+    if horaire.status != STATUS_CONFIRMED:
+        messages.error(request, "Seul un horaire confirmé par le SGA peut être publié.")
+    else:
+        horaire.transitionner(STATUS_PUBLISHED)
+        messages.success(request, f"L'horaire « {horaire.titre} » a été publié officiellement.")
+
+    return redirect("horaire_list")
 
 
 @role_required(ROLE_CHEF)

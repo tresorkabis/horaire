@@ -1,6 +1,74 @@
 import os
+import shutil
+import subprocess
+import sys
 import django
 import datetime
+
+# ---------------------------------------------------------------------------
+# Étape 0 : Nettoyage complet de la base de données et des migrations
+# ---------------------------------------------------------------------------
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "db.sqlite3")
+MIGRATIONS_DIR = os.path.join(BASE_DIR, "apps", "core", "migrations")
+
+
+def reset_database():
+    """Supprime la base de données SQLite si elle existe."""
+    if os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
+        print(f"✅ Base de données supprimée : {DB_PATH}")
+    else:
+        print("ℹ️  Aucune base de données à supprimer.")
+
+
+def reset_migrations():
+    """Supprime tous les fichiers de migration sauf __init__.py."""
+    if not os.path.isdir(MIGRATIONS_DIR):
+        print(f"⚠️  Dossier de migrations introuvable : {MIGRATIONS_DIR}")
+        return
+
+    removed = 0
+    for filename in os.listdir(MIGRATIONS_DIR):
+        if filename == "__init__.py":
+            continue
+        filepath = os.path.join(MIGRATIONS_DIR, filename)
+        if os.path.isfile(filepath):
+            os.remove(filepath)
+            removed += 1
+    print(f"✅ {removed} fichier(s) de migration supprimé(s).")
+
+
+def run_command(cmd, description):
+    """Exécute une commande shell et affiche le résultat."""
+    print(f"\n▶ {description}...")
+    result = subprocess.run(cmd, shell=True, cwd=BASE_DIR, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"❌ Erreur lors de {description} :")
+        print(result.stderr)
+        sys.exit(1)
+    if result.stdout.strip():
+        print(result.stdout.strip())
+    print(f"✅ {description} terminé.")
+    return result
+
+
+def regenerate_and_apply_migrations():
+    """Régénère les migrations et les applique."""
+    run_command(
+        f"{sys.executable} manage.py makemigrations core",
+        "Régénération des migrations",
+    )
+    run_command(
+        f"{sys.executable} manage.py migrate",
+        "Application des migrations",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Peuplement de la base de données
+# ---------------------------------------------------------------------------
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
@@ -15,7 +83,9 @@ from apps.core.models import (
 
 
 def seed():
+    print("\n" + "=" * 60)
     print("Début du peuplement de la base de données ChronoPlan...")
+    print("=" * 60)
 
     roles_names = ['Chef de Filière', 'Enseignant', 'Étudiant', 'SG-A']
     roles = {name: Role.objects.get_or_create(libelle=name)[0] for name in roles_names}
@@ -170,8 +240,9 @@ def seed():
 
     Creneau_Horaire.objects.get_or_create(jours="Mardi", heure="08:00:00", cours=c2, personnel=prof, horaire=None, status=STATUS_PROPOSED, annotations="Proposition pour le créneau de Base de Données NoSQL")
 
+    print("\n" + "=" * 60)
     print("Base de données prête !")
-    print("---------------------------------------")
+    print("=" * 60)
     print("Utilisateurs de test :")
     print("1. Chef Filière 1 : chef / demo")
     print("2. Chef Filière 2 : chef2 / demo")
@@ -183,7 +254,7 @@ def seed():
     print("8. Étudiant 1    : etud / demo")
     print("9. Étudiant 2    : etud2 / demo")
     print("10. Étudiant 3   : etud3 / demo")
-    print("---------------------------------------")
+    print("-" * 60)
     print(f"Horaires de cours  : {Horaire.objects.filter(type_horaire=TYPE_COURS).count()}")
     print(f"Horaires d'examens : {Horaire.objects.filter(type_horaire=TYPE_EXAMEN).count()}")
     print(f"Créneaux créés     : {Creneau_Horaire.objects.count()}")
@@ -191,4 +262,18 @@ def seed():
 
 
 if __name__ == "__main__":
+    print("=" * 60)
+    print("ChronoPlan — Réinitialisation complète de la base de données")
+    print("=" * 60)
+
+    # 1. Supprimer la base de données
+    reset_database()
+
+    # 2. Supprimer les migrations
+    reset_migrations()
+
+    # 3. Régénérer et appliquer les migrations
+    regenerate_and_apply_migrations()
+
+    # 4. Peupler la base de données
     seed()

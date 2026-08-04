@@ -65,14 +65,38 @@
             
             <div class="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
                 <p class="text-xs text-slate-400">Créé le {{ h.date_creation|date:"d M Y" }}</p>
-                 <div class="flex gap-2">
+                 <div class="flex flex-wrap gap-2">
                      <a href="{% url 'view_horaire' h.pk %}" class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-slate-100 border border-slate-200">
                          <i class="fa-solid fa-eye"></i> Voir
                      </a>
-                     {% if is_chef %}
+                     {% if is_chef and h.status == 'DRAFT' %}
                      <a href="{% url 'edit_horaire' h.pk %}" class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold text-brand-600 transition hover:bg-blue-50 border border-blue-100">
                          <i class="fa-solid fa-pen-to-square"></i> Modifier
                      </a>
+                     {% endif %}
+                     {% if is_chef and h.status == 'DRAFT' %}
+                     <form method="post" action="{% url 'propose_horaire' h.pk %}">
+                         {% csrf_token %}
+                         <button type="submit" class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold text-amber-600 transition hover:bg-amber-50 border border-amber-200" title="Proposer au SGA">
+                             <i class="fa-solid fa-paper-plane"></i> Proposer
+                         </button>
+                     </form>
+                     {% endif %}
+                     {% if is_sga and h.status == 'PROPOSED' %}
+                     <form method="post" action="{% url 'confirm_horaire' h.pk %}">
+                         {% csrf_token %}
+                         <button type="submit" class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold text-emerald-600 transition hover:bg-emerald-50 border border-emerald-200" title="Confirmer l'horaire">
+                             <i class="fa-solid fa-check-double"></i> Confirmer
+                         </button>
+                     </form>
+                     {% endif %}
+                     {% if is_chef and h.status == 'CONFIRMED' %}
+                     <form method="post" action="{% url 'publish_horaire' h.pk %}">
+                         {% csrf_token %}
+                         <button type="submit" class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold text-brand-600 transition hover:bg-blue-50 border border-blue-200" title="Publier l'horaire">
+                             <i class="fa-solid fa-rocket"></i> Publier
+                         </button>
+                     </form>
                      {% endif %}
                  </div>
             </div>
