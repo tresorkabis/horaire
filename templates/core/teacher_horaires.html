@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Mes horaires · Horaires ESFORCA{% endblock %}
+{% block page_name %}Mes horaires{% endblock %}
+{% block content %}
+<div class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+  <div>
+    <a href="{% url 'dashboard' %}" class="mb-3 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-brand-600">
+      <i class="fa-solid fa-arrow-left"></i> Retour au tableau de bord
+    </a>
+    <h1 class="font-display text-3xl font-extrabold text-slate-950">Mes horaires</h1>
+    <p class="mt-1 text-sm text-slate-500">Les emplois du temps dans lesquels vos créneaux sont intégrés.</p>
+  </div>
+</div>
+
+{% if horaires %}
+<div class="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
+  {% for h in horaires %}
+  <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-card transition hover:shadow-md">
+    <div class="flex items-start justify-between">
+      <div class="flex gap-4">
+        <div class="grid h-12 w-12 place-items-center rounded-xl {% if h.type_horaire == 'EXAMEN' %}bg-amber-50 text-amber-600{% else %}bg-blue-50 text-brand-600{% endif %}">
+          <i class="fa-solid {% if h.type_horaire == 'EXAMEN' %}fa-pen-to-square{% else %}fa-calendar-week{% endif %} text-xl"></i>
+        </div>
+        <div>
+          <h3 class="font-display text-lg font-bold text-slate-900">{{ h.titre }}</h3>
+          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            {{ h.promotion.designation }} — {{ h.promotion.filiere.nom_filiere }} ({{ h.promotion.annee_academique }})
+          </p>
+        </div>
+      </div>
+      <div class="rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider {% if h.status == 'PUBLISHED' %}bg-emerald-100 text-emerald-700{% elif h.status == 'CONFIRMED' %}bg-blue-100 text-blue-700{% elif h.status == 'PROPOSED' %}bg-amber-100 text-amber-700{% else %}bg-slate-100 text-slate-600{% endif %}">
+        {{ h.get_status_display }}
+      </div>
+    </div>
+
+    <div class="mt-5">
+      <div class="mb-2 flex items-center justify-between">
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Type</p>
+        <span class="rounded-md px-2 py-1 text-xs font-bold {% if h.type_horaire == 'EXAMEN' %}bg-amber-50 text-amber-700{% else %}bg-violet-50 text-violet-700{% endif %}">
+          {% if h.type_horaire == 'EXAMEN' %}Examen{% else %}Cours{% endif %}
+        </span>
+      </div>
+    </div>
+
+    <div class="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
+      <p class="text-xs text-slate-400">Créé le {{ h.date_creation|date:"d M Y" }}</p>
+      <a href="{% url 'view_horaire' h.pk %}" class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold text-brand-600 transition hover:bg-blue-50 border border-blue-200">
+        <i class="fa-solid fa-eye"></i> Voir l'horaire
+      </a>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<div class="rounded-3xl border-2 border-dashed border-slate-200 p-12 text-center">
+  <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+    <i class="fa-regular fa-calendar-xmark text-2xl"></i>
+  </div>
+  <h3 class="text-lg font-bold text-slate-900">Aucun horaire associé</h3>
+  <p class="text-sm text-slate-500 mt-2">Vos créneaux ne sont pas encore intégrés dans un emploi du temps global.</p>
+</div>
+{% endif %}
+{% endblock %}

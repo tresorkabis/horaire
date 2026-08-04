@@ -16,6 +16,7 @@ urlpatterns = [
     path('availability/', views.submit_availability, name='submit_availability'),
     path('availability/delete/<int:pk>/', views.delete_availability, name='delete_availability'),
     path('teacher/courses/', views.teacher_courses, name='teacher_courses'),
+    path('teacher/horaires/', views.teacher_horaires, name='teacher_horaires'),
     path('personnel/', views.manage_personnel, name='manage_personnel'),
     path('personnel/<int:pk>/edit/', views.manage_personnel, name='edit_personnel'),
     path('personnel/<int:pk>/delete/', views.delete_personnel, name='delete_personnel'),

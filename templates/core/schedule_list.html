@@ -59,6 +59,23 @@ document.addEventListener('DOMContentLoaded', function() {
   <a href="?status=PUBLISHED" class="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700">Publiés</a>
 </div>
 
+{% if active_cours %}
+<div class="mb-4 flex items-center justify-between rounded-2xl border border-blue-200 bg-blue-50 px-5 py-3">
+  <p class="text-sm font-bold text-blue-800">
+    <i class="fa-solid fa-book-open mr-2"></i>
+    Créneaux filtrés par le cours :
+    {% for h in horaires %}
+      {% if forloop.first %}{{ h.cours.titre }}{% endif %}
+    {% empty %}
+      <span class="italic text-slate-500">recours introuvable</span>
+    {% endfor %}
+  </p>
+  <a href="{% url 'schedule_list' %}" class="rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-bold text-blue-600 hover:bg-blue-100">
+    <i class="fa-solid fa-xmark mr-1"></i>Retirer le filtre
+  </a>
+</div>
+{% endif %}
+
 <!-- Filtre par promotion + Recherche -->
 <section class="mb-5 overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card">
   <form method="get" class="flex flex-col gap-3 p-5 sm:flex-row sm:items-end">
@@ -80,6 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
     {% if active_status %}<input type="hidden" name="status" value="{{ active_status }}">{% endif %}
     {% if type_filtre %}<input type="hidden" name="type_horaire" value="{{ type_filtre }}">{% endif %}
+    {% if active_cours %}<input type="hidden" name="cours" value="{{ active_cours }}">{% endif %}
     <button class="rounded-xl bg-navy px-5 py-2.5 text-sm font-bold text-white">Filtrer</button>
   </form>
 </section>
@@ -192,11 +210,11 @@ document.addEventListener('DOMContentLoaded', function() {
 {% if horaires.has_other_pages %}
 <div class="mt-6 flex items-center justify-center gap-2">
   {% if horaires.has_previous %}
-  <a href="?page={{ horaires.previous_page_number }}{% if search %}&q={{ search }}{% endif %}{% if active_status %}&status={{ active_status }}{% endif %}{% if type_filtre %}&type_horaire={{ type_filtre }}{% endif %}{% if active_promotion %}&promotion={{ active_promotion }}{% endif %}" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50"><i class="fa-solid fa-chevron-left"></i></a>
+  <a href="?page={{ horaires.previous_page_number }}{% if search %}&q={{ search }}{% endif %}{% if active_status %}&status={{ active_status }}{% endif %}{% if type_filtre %}&type_horaire={{ type_filtre }}{% endif %}{% if active_promotion %}&promotion={{ active_promotion }}{% endif %}{% if active_cours %}&cours={{ active_cours }}{% endif %}" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50"><i class="fa-solid fa-chevron-left"></i></a>
   {% endif %}
   <span class="text-sm text-slate-400">Page {{ horaires.number }} sur {{ horaires.paginator.num_pages }}</span>
   {% if horaires.has_next %}
-  <a href="?page={{ horaires.next_page_number }}{% if search %}&q={{ search }}{% endif %}{% if active_status %}&status={{ active_status }}{% endif %}{% if type_filtre %}&type_horaire={{ type_filtre }}{% endif %}{% if active_promotion %}&promotion={{ active_promotion }}{% endif %}" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50"><i class="fa-solid fa-chevron-right"></i></a>
+  <a href="?page={{ horaires.next_page_number }}{% if search %}&q={{ search }}{% endif %}{% if active_status %}&status={{ active_status }}{% endif %}{% if type_filtre %}&type_horaire={{ type_filtre }}{% endif %}{% if active_promotion %}&promotion={{ active_promotion }}{% endif %}{% if active_cours %}&cours={{ active_cours }}{% endif %}" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50"><i class="fa-solid fa-chevron-right"></i></a>
   {% endif %}
 </div>
 {% endif %}

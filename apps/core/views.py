@@ -285,6 +285,11 @@ def schedule_list(request):
     if promotion_id and promotion_id.isdigit():
         horaires = horaires.filter(horaire__promotion__id_prom=promotion_id)
 
+    # Filtrage par cours (depuis "Mes cours" de l'enseignant)
+    cours_id = request.GET.get("cours", "")
+    if cours_id and cours_id.isdigit():
+        horaires = horaires.filter(cours__id_cours=cours_id)
+
     # Recherche par mot-clé
     search = request.GET.get("q", "").strip()
     if search:
@@ -297,7 +302,7 @@ def schedule_list(request):
     # Récupérer toutes les promotions pour le filtre
     promotions = Promotion.objects.all().order_by("filiere__nom_filiere", "designation")
 
-    context.update(active_status=status, search=search, promotions=promotions, active_promotion=promotion_id)
+    context.update(active_status=status, search=search, promotions=promotions, active_promotion=promotion_id, active_cours=cours_id)
 
     # Filtrage par type (cours / examen) pour la page de gestion des créneaux
     type_filtre = request.GET.get("type_horaire", "")
@@ -552,6 +557,27 @@ def teacher_courses(request):
         horaires__personnel=request.user.personnel
     ).distinct().order_by("titre")
     return render(request, "core/teacher_courses.html", {"cours": cours})
+
+
+@role_required(ROLE_ENSEIGNANT)
+def teacher_horaires(request):
+    """
+    Liste des horaires globaux (Horaire) auxquels l'enseignant participe.
+    Un enseignant voit les emplois du temps (cours et examens)
+    dans lesquels au moins un de ses créneaux est intégré.
+    """
+    if not hasattr(request.user, "personnel"):
+        messages.error(request, "Aucun profil personnel associé.")
+        return redirect("dashboard")
+
+    horaires = Horaire.objects.filter(
+        creneaux__personnel=request.user.personnel
+    ).distinct().select_related("promotion__filiere")
+
+    return render(request, "core/teacher_horaires.html", {
+        "horaires": horaires,
+        "user_roles": _roles(request.user),
+    })
 
 
 @role_required(ROLE_ENSEIGNANT)
@@ -817,7 +843,7 @@ def create_horaire(request):
         "user_roles": _roles(request.user),
     })
 
-@role_required(ROLE_CHEF, ROLE_SGA, ROLE_ETUDIANT)
+@role_required(ROLE_CHEF, ROLE_SGA, ROLE_ETUDIANT, ROLE_ENSEIGNANT)
 def view_horaire(request, pk):
     """Affichage des détails d'un horaire global (Chef de Filière, SGA et Étudiant)."""
     from .models import JOURS_CHOICES
