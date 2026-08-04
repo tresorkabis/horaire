@@ -562,21 +562,31 @@ def teacher_courses(request):
 @role_required(ROLE_ENSEIGNANT)
 def teacher_horaires(request):
     """
-    Liste des horaires globaux (Horaire) auxquels l'enseignant participe.
-    Un enseignant voit les emplois du temps (cours et examens)
+    Liste des horaires globaux (Horaire) publiés auxquels l'enseignant participe.
+    Un enseignant voit uniquement les emplois du temps PUBLISHED
     dans lesquels au moins un de ses créneaux est intégré.
     """
     if not hasattr(request.user, "personnel"):
         messages.error(request, "Aucun profil personnel associé.")
         return redirect("dashboard")
 
+    # Filtre par type (cours / examen)
+    type_filtre = request.GET.get("type", TYPE_COURS)
+    if type_filtre not in (TYPE_COURS, TYPE_EXAMEN):
+        type_filtre = TYPE_COURS
+
     horaires = Horaire.objects.filter(
-        creneaux__personnel=request.user.personnel
+        creneaux__personnel=request.user.personnel,
+        status=STATUS_PUBLISHED,
+        type_horaire=type_filtre,
     ).distinct().select_related("promotion__filiere")
 
     return render(request, "core/teacher_horaires.html", {
         "horaires": horaires,
         "user_roles": _roles(request.user),
+        "type_filtre": type_filtre,
+        "TYPE_COURS": TYPE_COURS,
+        "TYPE_EXAMEN": TYPE_EXAMEN,
     })
 
 

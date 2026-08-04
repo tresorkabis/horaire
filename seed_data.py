@@ -272,40 +272,76 @@ def seed():
     # --- Horaires d'examens ---
 
     # L1 GL - Session S1 (PUBLISHED) : 1 créneau
-    Creneau_Horaire.objects.get_or_create(jours="Mercredi", heure="11:40:00", cours=c1, personnel=chef3, horaire=h_gl_s1_session, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(
+        date=datetime.date(2026, 6, 15), heure="11:40:00", cours=c1, 
+        personnel=chef3, horaire=h_gl_s1_session, status=STATUS_PUBLISHED, type_horaire=TYPE_EXAMEN
+    )
 
     # L1 GL - Rattrapage S1 (PUBLISHED) : 1 créneau
-    Creneau_Horaire.objects.get_or_create(jours="Vendredi", heure="08:00:00", cours=c2, personnel=prof3, horaire=h_gl_s1_rattrapage, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(
+        date=datetime.date(2026, 6, 22), heure="08:00:00", cours=c2, 
+        personnel=prof3, horaire=h_gl_s1_rattrapage, status=STATUS_PUBLISHED, type_horaire=TYPE_EXAMEN
+    )
 
     # L2 GL - Session S1 (PUBLISHED) : 1 créneau
-    Creneau_Horaire.objects.get_or_create(jours="Lundi", heure="08:00:00", cours=c3, personnel=prof3, horaire=h_l2_s1_session, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(
+        date=datetime.date(2026, 6, 16), heure="08:00:00", cours=c3, 
+        personnel=prof3, horaire=h_l2_s1_session, status=STATUS_PUBLISHED, type_horaire=TYPE_EXAMEN
+    )
 
     # L2 GL - Rattrapage S1 (PUBLISHED) : 1 créneau
-    Creneau_Horaire.objects.get_or_create(jours="Jeudi", heure="11:40:00", cours=c8, personnel=prof3, horaire=h_l2_s1_rattrapage, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(
+        date=datetime.date(2026, 6, 23), heure="11:40:00", cours=c8, 
+        personnel=prof3, horaire=h_l2_s1_rattrapage, status=STATUS_PUBLISHED, type_horaire=TYPE_EXAMEN
+    )
 
     # L3 GL - Session S1 (PUBLISHED) : 1 créneau
-    Creneau_Horaire.objects.get_or_create(jours="Mardi", heure="11:40:00", cours=c9, personnel=chef3, horaire=h_l3_s1_session, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(
+        date=datetime.date(2026, 6, 17), heure="11:40:00", cours=c9, 
+        personnel=chef3, horaire=h_l3_s1_session, status=STATUS_PUBLISHED, type_horaire=TYPE_EXAMEN
+    )
 
     # L3 GL - Rattrapage S1 (PUBLISHED) : 1 créneau
-    Creneau_Horaire.objects.get_or_create(jours="Jeudi", heure="08:00:00", cours=c7, personnel=chef3, horaire=h_l3_s1_rattrapage, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(
+        date=datetime.date(2026, 6, 24), heure="08:00:00", cours=c7, 
+        personnel=chef3, horaire=h_l3_s1_rattrapage, status=STATUS_PUBLISHED, type_horaire=TYPE_EXAMEN
+    )
 
     # SC - Session S1 (PUBLISHED) : 1 créneau
-    Creneau_Horaire.objects.get_or_create(jours="Jeudi", heure="08:00:00", cours=c4, personnel=prof2, horaire=h_sc_s1_session, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(
+        date=datetime.date(2026, 6, 18), heure="08:00:00", cours=c4, 
+        personnel=prof2, horaire=h_sc_s1_session, status=STATUS_PUBLISHED, type_horaire=TYPE_EXAMEN
+    )
 
     # SC - Rattrapage S1 (PUBLISHED) : 1 créneau
-    Creneau_Horaire.objects.get_or_create(jours="Samedi", heure="08:00:00", cours=c4, personnel=prof2, horaire=h_sc_s1_rattrapage, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(
+        date=datetime.date(2026, 6, 25), heure="08:00:00", cours=c4, 
+        personnel=prof2, horaire=h_sc_s1_rattrapage, status=STATUS_PUBLISHED, type_horaire=TYPE_EXAMEN
+    )
 
     # Réseaux - Session S1 (PUBLISHED) : 1 créneau
-    Creneau_Horaire.objects.get_or_create(jours="Vendredi", heure="11:40:00", cours=c5, personnel=chef2, horaire=h_rt_s1_session, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(
+        date=datetime.date(2026, 6, 19), heure="11:40:00", cours=c5, 
+        personnel=chef2, horaire=h_rt_s1_session, status=STATUS_PUBLISHED, type_horaire=TYPE_EXAMEN
+    )
 
     # Réseaux - Rattrapage S1 (PUBLISHED) : 1 créneau
-    Creneau_Horaire.objects.get_or_create(jours="Samedi", heure="08:00:00", cours=c5, personnel=chef2, horaire=h_rt_s1_rattrapage, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(
+        date=datetime.date(2026, 6, 26), heure="08:00:00", cours=c5, 
+        personnel=chef2, horaire=h_rt_s1_rattrapage, status=STATUS_PUBLISHED, type_horaire=TYPE_EXAMEN
+    )
 
     # Secrétariat - Session S1 (PUBLISHED) : 1 créneau
-    Creneau_Horaire.objects.get_or_create(jours="Mardi", heure="08:00:00", cours=c6, personnel=prof2, horaire=h_sd_s1_session, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(
+        date=datetime.date(2026, 6, 20), heure="08:00:00", cours=c6, 
+        personnel=prof2, horaire=h_sd_s1_session, status=STATUS_PUBLISHED, type_horaire=TYPE_EXAMEN
+    )
 
     # Secrétariat - Rattrapage S1 (PUBLISHED) : 1 créneau
-    Creneau_Horaire.objects.get_or_create(jours="Jeudi", heure="11:40:00", cours=c6, personnel=prof2, horaire=h_sd_s1_rattrapage, status=STATUS_PUBLISHED)
+    Creneau_Horaire.objects.get_or_create(
+        date=datetime.date(2026, 6, 27), heure="11:40:00", cours=c6, 
+        personnel=prof2, horaire=h_sd_s1_rattrapage, status=STATUS_PUBLISHED, type_horaire=TYPE_EXAMEN
+    )
 
     # --- Proposition isolée (sans horaire) ---
     Creneau_Horaire.objects.get_or_create(jours="Mardi", heure="08:00:00", cours=c2, personnel=prof, horaire=None, status=STATUS_PROPOSED, annotations="Proposition pour le créneau de Base de Données NoSQL")

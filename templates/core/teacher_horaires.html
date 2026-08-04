@@ -8,8 +8,14 @@
       <i class="fa-solid fa-arrow-left"></i> Retour au tableau de bord
     </a>
     <h1 class="font-display text-3xl font-extrabold text-slate-950">Mes horaires</h1>
-    <p class="mt-1 text-sm text-slate-500">Les emplois du temps dans lesquels vos créneaux sont intégrés.</p>
+    <p class="mt-1 text-sm text-slate-500">Les emplois du temps publiés dans lesquels vos créneaux sont intégrés.</p>
   </div>
+</div>
+
+<!-- Filtres par type -->
+<div class="mb-5 flex flex-wrap items-center gap-2">
+  <a href="?type={{ TYPE_COURS }}" class="rounded-xl px-4 py-2 text-xs font-bold {% if type_filtre == TYPE_COURS %}bg-brand-600 text-white shadow-lg{% else %}border border-slate-200 bg-white text-slate-500{% endif %}"><i class="fa-solid fa-book-open mr-1"></i>Cours</a>
+  <a href="?type={{ TYPE_EXAMEN }}" class="rounded-xl px-4 py-2 text-xs font-bold {% if type_filtre == TYPE_EXAMEN %}bg-brand-600 text-white shadow-lg{% else %}border border-slate-200 bg-white text-slate-500{% endif %}"><i class="fa-solid fa-pen-to-square mr-1"></i>Examens</a>
 </div>
 
 {% if horaires %}
