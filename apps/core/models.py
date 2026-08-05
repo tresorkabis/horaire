@@ -33,6 +33,12 @@ TYPE_HORAIRE_CHOICES = [
     (TYPE_EXAMEN, "Examen"),
 ]
 
+#: Choix d'heures standardisés pour les créneaux et disponibilités.
+HEURE_CHOICES = [
+    ("08:00:00", "08:00"),
+    ("11:40:00", "11:40"),
+]
+
 #: États du workflow de validation des horaires.
 STATUS_DRAFT = "DRAFT"
 STATUS_PROPOSED = "PROPOSED"
@@ -175,6 +181,11 @@ class Personnel(Utilisateur):
         related_name="personnels",
         help_text="Fonction occupée par le personnel (Chef de Filière, Enseignant, etc.)",
     )
+    filiere = models.ForeignKey(
+        "Filiere", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="personnels",
+        help_text="Filière assignée au personnel (essentiel pour les Chefs de Filière)",
+    )
 
     class Meta(Utilisateur.Meta):  # type: ignore[misc]
         verbose_name = "Personnel"
@@ -288,7 +299,13 @@ class Cours(models.Model):
 
     id_cours = models.AutoField(primary_key=True)
     titre = models.CharField(max_length=200)
-    duree = models.PositiveIntegerField(help_text="Durée en minutes")
+    duree = models.PositiveIntegerField(help_text="Durée en heures (ex: 30H)")
+    duree_unite = models.CharField(
+        max_length=10,
+        choices=[("H", "Heures"), ("MIN", "Minutes")],
+        default="H",
+        help_text="Unité de la durée (heures par défaut)",
+    )
     enseignant = models.ForeignKey(
         Personnel, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="cours_assignes",
@@ -307,6 +324,13 @@ class Cours(models.Model):
 
     def __str__(self):
         return self.titre
+
+    @property
+    def duree_label(self):
+        """Retourne la durée formatée avec son unité (ex: 30H)."""
+        if self.duree_unite == "MIN":
+            return f"{self.duree} min"
+        return f"{self.duree}H"
 
 
 class Horaire(models.Model):
@@ -388,10 +412,7 @@ class Creneau_Horaire(models.Model):
     )
     heure = models.CharField(
         max_length=10,
-        choices=[
-            ("08:00:00", "08:00"),
-            ("11:40:00", "11:40"),
-        ],
+        choices=HEURE_CHOICES,
         default="08:00:00",
         help_text="Heure du créneau (08:00 ou 11h40)",
     )
@@ -468,21 +489,13 @@ class Disponibilite(models.Model):
         Personnel, on_delete=models.CASCADE, related_name="disponibilites"
     )
     jour = models.CharField(max_length=20, choices=JOURS_CHOICES)
-    heure_debut = models.TimeField()
-    heure_fin = models.TimeField()
+    heure = models.TimeField()
     note = models.TextField(blank=True)
 
     class Meta:
         verbose_name = "Disponibilité"
         verbose_name_plural = "Disponibilités"
-        ordering = ["enseignant", "jour", "heure_debut"]
-        # Contrainte temporairement désactivée pour permettre les migrations
-        # constraints = [
-        #     models.CheckConstraint(
-        #         check=models.Q(heure_fin__gt=models.F("heure_debut")),
-        #         name="disponibilite_fin_apres_debut",
-        #     )
-        # ]
+        ordering = ["enseignant", "jour", "heure"]
 
     def __str__(self):
-        return f"{self.enseignant} — {self.jour} {self.heure_debut}-{self.heure_fin}"
+        return f"{self.enseignant} — {self.jour} {self.heure.strftime('%H:%M')}"

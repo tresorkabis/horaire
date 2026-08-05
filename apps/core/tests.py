@@ -3,7 +3,7 @@ from datetime import date, time
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import (Creneau_Horaire, Cours, Etudiant, Filiere, Fonction,
+from .models import (Creneau_Horaire, Cours, Etudiant, Filiere,
                      Personnel, Promotion, Role, Utilisateur_Role)
 
 
@@ -25,8 +25,7 @@ class WorkflowTests(TestCase):
             role, _ = Role.objects.get_or_create(libelle=label)
             Utilisateur_Role.objects.create(id_util=user, role=role)
         cours = Cours.objects.create(titre="Django", duree=120)
-        fonction = Fonction.objects.create(intitule="Cours théorique")
-        self.horaire = Creneau_Horaire.objects.create(heure=time(8), jours="Lundi", cours=cours, personnel=self.teacher, fonction=fonction, status="PROPOSED")
+        self.horaire = Creneau_Horaire.objects.create(heure=time(8), jours="Lundi", cours=cours, personnel=self.teacher, status="PROPOSED")
 
     def test_sga_confirme_puis_chef_publie(self):
         self.client.force_login(self.sga)
@@ -48,8 +47,8 @@ class WorkflowTests(TestCase):
 
     def test_disponibilite_est_enregistree(self):
         self.client.force_login(self.teacher)
-        response = self.client.post(reverse("submit_availability"), {"jour[]": ["Mardi"], "debut[]": ["09:00"], "fin[]": ["11:00"], "note[]": [""]})
-        self.assertRedirects(response, reverse("dashboard"))
+        response = self.client.post(reverse("submit_availability"), {"jour[]": ["Mardi"], "heure[]": ["08:00:00"], "note[]": [""]})
+        self.assertRedirects(response, reverse("submit_availability"))
         self.assertEqual(self.teacher.disponibilites.count(), 1)
 
     def test_transition_metier_invalide_est_bloquee(self):
@@ -97,12 +96,13 @@ class WorkflowTests(TestCase):
     def test_creation_horaire_par_chef(self):
         self.client.force_login(self.chef)
         response = self.client.post(reverse("create_schedule"), {
-            "jours": "Mercredi", "heure": "13:00", "cours": self.horaire.cours_id,
-            "personnel": self.teacher.pk, "fonction": self.horaire.fonction_id,
+            "type_horaire": "COURS",
+            "jours": "Mercredi", "heure": "08:00:00", "cours": self.horaire.cours_id,
+            "personnel": self.teacher.pk,
             "status": "DRAFT",
         })
         self.assertRedirects(response, reverse("dashboard"))
-        self.assertTrue(Creneau_Horaire.objects.filter(jours="Mercredi", heure="13:00").exists())
+        self.assertTrue(Creneau_Horaire.objects.filter(jours="Mercredi", heure="08:00:00").exists())
 
 
 class StudentVisibilityTests(TestCase):

@@ -140,16 +140,16 @@ def seed():
     prof3 = create_actor("prof3", "MULOPWE", "Sophie", "Enseignant", Personnel, matricule="P007", grade="Chef de Travaux", fonction=f_enseignant)
 
     # 6 cours pour Génie Logiciel (3 par semestre)
-    c1, _ = Cours.objects.get_or_create(titre="Algorithmique Avancée", defaults={'duree': 120, 'promotion': l1_gl})
-    c2, _ = Cours.objects.get_or_create(titre="Base de Données NoSQL", defaults={'duree': 90, 'promotion': l1_gl})
-    c3, _ = Cours.objects.get_or_create(titre="Architecture des Ordinateurs", defaults={'duree': 120, 'promotion': l2_gl})
-    c7, _ = Cours.objects.get_or_create(titre="Programmation Web Avancée", defaults={'duree': 120, 'promotion': l1_gl})
-    c8, _ = Cours.objects.get_or_create(titre="Intelligence Artificielle", defaults={'duree': 90, 'promotion': l2_gl})
-    c9, _ = Cours.objects.get_or_create(titre="Sécurité Informatique", defaults={'duree': 120, 'promotion': l3_gl})
+    c1, _ = Cours.objects.get_or_create(titre="Algorithmique Avancée", defaults={'duree': 30, 'duree_unite': 'H', 'promotion': l1_gl})
+    c2, _ = Cours.objects.get_or_create(titre="Base de Données NoSQL", defaults={'duree': 45, 'duree_unite': 'H', 'promotion': l1_gl})
+    c3, _ = Cours.objects.get_or_create(titre="Architecture des Ordinateurs", defaults={'duree': 30, 'duree_unite': 'H', 'promotion': l2_gl})
+    c7, _ = Cours.objects.get_or_create(titre="Programmation Web Avancée", defaults={'duree': 30, 'duree_unite': 'H', 'promotion': l1_gl})
+    c8, _ = Cours.objects.get_or_create(titre="Intelligence Artificielle", defaults={'duree': 45, 'duree_unite': 'H', 'promotion': l2_gl})
+    c9, _ = Cours.objects.get_or_create(titre="Sécurité Informatique", defaults={'duree': 30, 'duree_unite': 'H', 'promotion': l3_gl})
     # Cours pour autres filières
-    c4, _ = Cours.objects.get_or_create(titre="Marketing Digital", defaults={'duree': 90, 'promotion': l1_sc})
-    c5, _ = Cours.objects.get_or_create(titre="Administration Réseau", defaults={'duree': 120, 'promotion': l1_rt})
-    c6, _ = Cours.objects.get_or_create(titre="Communication Professionnelle", defaults={'duree': 90, 'promotion': l1_sd})
+    c4, _ = Cours.objects.get_or_create(titre="Marketing Digital", defaults={'duree': 45, 'duree_unite': 'H', 'promotion': l1_sc})
+    c5, _ = Cours.objects.get_or_create(titre="Administration Réseau", defaults={'duree': 30, 'duree_unite': 'H', 'promotion': l1_rt})
+    c6, _ = Cours.objects.get_or_create(titre="Communication Professionnelle", defaults={'duree': 45, 'duree_unite': 'H', 'promotion': l1_sd})
 
     # Associer l'enseignant à chaque cours
     c1.enseignant = chef

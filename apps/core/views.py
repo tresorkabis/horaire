@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
+from django.db.models import Q
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -142,16 +143,22 @@ def dashboard(request):
             status=STATUS_PROPOSED, 
             horaire__isnull=True
         )
-        # 2. Les horaires globaux de sa filière (Génie Logiciel)
-        horaires_integres = Horaire.objects.filter(
-            promotion__filiere__nom_filiere="Génie Logiciel"
-        ).select_related("promotion__filiere")
+        # 2. Les horaires globaux de sa filière
+        filiere_chef = getattr(user.personnel, 'filiere', None) if hasattr(user, 'personnel') else None
+        if filiere_chef:
+            horaires_integres = Horaire.objects.filter(
+                promotion__filiere=filiere_chef
+            ).select_related("promotion__filiere")
+        else:
+            # Fallback si aucune filière n'est assignée au chef
+            horaires_integres = Horaire.objects.none()
         
         context.update(
             is_chef=True, 
             horaires=horaires_integres, 
             propositions_en_attente=propositions_en_attente,
-            total_propositions=propositions_en_attente.count()
+            total_propositions=propositions_en_attente.count(),
+            filiere_chef=filiere_chef
         )
     elif user.is_enseignant and hasattr(request.user, "personnel"):
         enseignant_creneaux = related_creneaux.filter(personnel=request.user.personnel)
@@ -176,7 +183,7 @@ def dashboard(request):
         # Disponibilités de l'enseignant
         disponibilites = Disponibilite.objects.filter(
             enseignant=request.user.personnel
-        ).order_by("jour", "heure_debut")
+        ).order_by("jour", "heure")
 
         # Cours du jour (aujourd'hui)
         today_name = datetime.date.today().strftime("%A")
@@ -263,8 +270,11 @@ def schedule_list(request):
     elif user.is_chef:
         context["is_chef"] = True
         # Le chef de filière ne voit que les créneaux de ses propres promotions
-        # Filtrer par la filière Génie Logiciel (filière du chef)
-        horaires = horaires.filter(horaire__promotion__filiere__nom_filiere="Génie Logiciel")
+        filiere_chef = getattr(user.personnel, 'filiere', None) if hasattr(user, 'personnel') else None
+        if filiere_chef:
+            horaires = horaires.filter(horaire__promotion__filiere=filiere_chef)
+        else:
+            horaires = horaires.none()
     elif user.is_etudiant:
         context["is_etudiant"] = True
         # Filtrer par promotion si l'étudiant est connecté
@@ -331,6 +341,7 @@ def edit_schedule(request, pk=None):
     - Indépendante (proposition isolée)
     - Intégrée dans un Horaire global
     """
+    user = request.user
     creneau = get_object_or_404(Creneau_Horaire, pk=pk) if pk else None
     
     if creneau and creneau.status not in (STATUS_DRAFT, STATUS_PROPOSED):
@@ -356,15 +367,19 @@ def edit_schedule(request, pk=None):
         messages.success(request, "Créneau enregistré avec succès.")
         return redirect("dashboard")
 
-    # Pour le formulaire, on peut ajouter la liste des Horaires disponibles pour l'affectation
-    horaires_dispos = Horaire.objects.all()
+    # Pour le formulaire, on filtre la liste des Horaires disponibles selon la filière du Chef
+    filiere_chef = getattr(user.personnel, 'filiere', None) if hasattr(user, 'personnel') else None
+    if filiere_chef:
+        horaires_dispos = Horaire.objects.filter(promotion__filiere=filiere_chef)
+    else:
+        horaires_dispos = Horaire.objects.none()
     
     # Disponibilités des enseignants pour le lien visuel dans le formulaire
     import json
     from collections import defaultdict
     
     disponibilites_qs = Disponibilite.objects.select_related("enseignant").order_by(
-        "enseignant", "jour", "heure_debut"
+        "enseignant", "jour", "heure"
     )
     
     # Structurer les données par enseignant → jour → liste de créneaux
@@ -372,19 +387,39 @@ def edit_schedule(request, pk=None):
     for d in disponibilites_qs:
         teacher_id = str(d.enseignant.pk)
         dispo_data[teacher_id][d.jour].append({
-            "debut": d.heure_debut.strftime("%H:%M"),
-            "fin": d.heure_fin.strftime("%H:%M"),
+            "heure": d.heure.strftime("%H:%M"),
             "note": d.note or "",
         })
     disponibilites_json = json.dumps(dispo_data)
 
-    # Mapping cours → enseignant (basé sur les créneaux existants)
+    # Mapping cours → enseignant (basé sur les créneaux existants et l'assignation directe)
     cours_enseignant = {}
     for c in Cours.objects.all():
-        creneau = Creneau_Horaire.objects.filter(cours=c).select_related("personnel").first()
-        if creneau and creneau.personnel:
-            cours_enseignant[str(c.pk)] = str(creneau.personnel.pk)
+        if c.enseignant:
+            cours_enseignant[str(c.pk)] = str(c.enseignant.pk)
+        else:
+            creneau = Creneau_Horaire.objects.filter(cours=c).select_related("personnel").first()
+            if creneau and creneau.personnel:
+                cours_enseignant[str(c.pk)] = str(creneau.personnel.pk)
     cours_enseignant_json = json.dumps(cours_enseignant)
+
+    # Mapping enseignant → liste de cours (pour le filtrage dynamique)
+    from collections import defaultdict
+    enseignant_cours = defaultdict(list)
+    for c in Cours.objects.all():
+        if c.enseignant:
+            enseignant_cours[str(c.enseignant.pk)].append({
+                "id": c.pk,
+                "titre": c.titre,
+            })
+        else:
+            creneau = Creneau_Horaire.objects.filter(cours=c).select_related("personnel").first()
+            if creneau and creneau.personnel:
+                enseignant_cours[str(creneau.personnel.pk)].append({
+                    "id": c.pk,
+                    "titre": c.titre,
+                })
+    enseignant_cours_json = json.dumps(enseignant_cours)
 
     # Propositions de l'enseignant sélectionné (pour pré-remplissage)
     # Structurer par enseignant → jour → liste de propositions
@@ -408,6 +443,7 @@ def edit_schedule(request, pk=None):
         "horaires": horaires_dispos,
         "disponibilites_json": disponibilites_json,
         "cours_enseignant_json": cours_enseignant_json,
+        "enseignant_cours_json": enseignant_cours_json,
         "propositions_json": propositions_json,
     })
 
@@ -505,15 +541,14 @@ def submit_availability(request):
     if request.method == "POST":
         rows = zip(
             request.POST.getlist("jour[]"),
-            request.POST.getlist("debut[]"),
-            request.POST.getlist("fin[]"),
+            request.POST.getlist("heure[]"),
             request.POST.getlist("note[]"),
         )
         forms = [
             DisponibiliteForm(
-                {"jour": j, "heure_debut": d, "heure_fin": f, "note": n}
+                {"jour": j, "heure": h, "note": n}
             )
-            for j, d, f, n in rows
+            for j, h, n in rows
         ]
         if forms and all(form.is_valid() for form in forms):
             with transaction.atomic():
@@ -522,12 +557,12 @@ def submit_availability(request):
                     item.enseignant = request.user.personnel
                     item.save()
             messages.success(request, "Disponibilités soumises.")
-            return redirect("dashboard")
+            return redirect("submit_availability")
         messages.error(request, "Corrigez les créneaux invalides.")
 
     disponibilites = Disponibilite.objects.filter(
         enseignant=request.user.personnel
-    ).order_by("jour", "heure_debut")
+    ).order_by("jour", "heure")
     return render(request, "core/availability.html", {"disponibilites": disponibilites})
 
 
@@ -549,12 +584,16 @@ def delete_availability(request, pk):
 
 @role_required(ROLE_ENSEIGNANT)
 def teacher_courses(request):
-    """Liste des cours (Cours) assignés à l'enseignant connecté, déduits des créneaux."""
+    """Liste des cours (Cours) assignés à l'enseignant connecté."""
     if not hasattr(request.user, "personnel"):
         messages.error(request, "Aucun profil personnel associé.")
         return redirect("dashboard")
+    # Les cours assignés à l'enseignant proviennent de deux sources :
+    # 1. Le champ `enseignant` du modèle Cours (assignation directe)
+    # 2. Les créneaux horaires (Creneau_Horaire) où l'enseignant est le personnel
     cours = Cours.objects.filter(
-        horaires__personnel=request.user.personnel
+        Q(enseignant=request.user.personnel) |
+        Q(horaires__personnel=request.user.personnel)
     ).distinct().order_by("titre")
     return render(request, "core/teacher_courses.html", {"cours": cours})
 

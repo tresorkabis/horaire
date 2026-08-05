@@ -27,7 +27,7 @@
         <div>
           <p class="font-bold text-slate-800">{{ item }}</p>
           {% if type_objet == 'cours' %}
-          <p class="text-xs text-slate-400">Durée : {{ item.duree }} minutes</p>
+          <p class="text-xs text-slate-400">Durée : {{ item.duree_label }}</p>
           {% if enseignants_par_cours|get_item:item.pk %}
           <div class="mt-1 flex flex-wrap gap-1">
             {% for enseignant in enseignants_par_cours|get_item:item.pk %}

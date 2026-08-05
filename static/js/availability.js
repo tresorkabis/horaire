@@ -9,6 +9,10 @@
     "use strict";
 
     var DAYS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+    var HEURES = [
+        { value: "08:00:00", label: "08:00" },
+        { value: "11:40:00", label: "11:40" },
+    ];
 
     /** Cree une nouvelle ligne de formulaire pour une disponibilite. */
     function createRow() {
@@ -17,34 +21,30 @@
         // Cellule Jour
         var tdDay = document.createElement("td");
         tdDay.className = "py-4 px-6";
-        var select = document.createElement("select");
-        select.name = "jour[]";
-        select.className = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none";
+        var selectJour = document.createElement("select");
+        selectJour.name = "jour[]";
+        selectJour.className = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none";
         DAYS.forEach(function (day) {
             var opt = document.createElement("option");
             opt.value = day;
             opt.textContent = day;
-            select.appendChild(opt);
+            selectJour.appendChild(opt);
         });
-        tdDay.appendChild(select);
+        tdDay.appendChild(selectJour);
 
-        // Cellule Heure debut
-        var tdStart = document.createElement("td");
-        tdStart.className = "py-4 px-6";
-        var inputStart = document.createElement("input");
-        inputStart.type = "time";
-        inputStart.name = "debut[]";
-        inputStart.className = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none";
-        tdStart.appendChild(inputStart);
-
-        // Cellule Heure fin
-        var tdEnd = document.createElement("td");
-        tdEnd.className = "py-4 px-6";
-        var inputEnd = document.createElement("input");
-        inputEnd.type = "time";
-        inputEnd.name = "fin[]";
-        inputEnd.className = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none";
-        tdEnd.appendChild(inputEnd);
+        // Cellule Heure
+        var tdHeure = document.createElement("td");
+        tdHeure.className = "py-4 px-6";
+        var selectHeure = document.createElement("select");
+        selectHeure.name = "heure[]";
+        selectHeure.className = "w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none";
+        HEURES.forEach(function (h) {
+            var opt = document.createElement("option");
+            opt.value = h.value;
+            opt.textContent = h.label;
+            selectHeure.appendChild(opt);
+        });
+        tdHeure.appendChild(selectHeure);
 
         // Cellule Note
         var tdNote = document.createElement("td");
@@ -65,8 +65,7 @@
         });
 
         tr.appendChild(tdDay);
-        tr.appendChild(tdStart);
-        tr.appendChild(tdEnd);
+        tr.appendChild(tdHeure);
         tr.appendChild(tdNote);
         tr.appendChild(tdDelete);
 

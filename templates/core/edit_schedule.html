@@ -134,6 +134,7 @@
 <script>
 const disponibilitesData = {{ disponibilites_json|safe }};
 const coursEnseignant = {{ cours_enseignant_json|safe }};
+const enseignantCours = {{ enseignant_cours_json|safe }};
 const propositionsData = {{ propositions_json|safe }};
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -175,6 +176,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Filtrer les cours selon l'enseignant sélectionné
+    function filterCoursByEnseignant() {
+        const teacherId = personnelSelect.value;
+        const currentCoursId = coursSelect.value;
+
+        // Vider les options actuelles
+        coursSelect.innerHTML = '';
+
+        if (!teacherId || !enseignantCours[teacherId]) {
+            // Aucun enseignant sélectionné ou aucun cours assigné
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = 'Aucun cours assigné à cet enseignant';
+            coursSelect.appendChild(opt);
+            return;
+        }
+
+        // Ajouter les cours de l'enseignant
+        enseignantCours[teacherId].forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.titre;
+            if (String(c.id) === String(currentCoursId)) {
+                opt.selected = true;
+            }
+            coursSelect.appendChild(opt);
+        });
+    }
+
     function updateDisponibilites() {
         const teacherId = personnelSelect.value;
         const jour = joursSelect.value;
@@ -199,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
             list.innerHTML = dispoPourJour.map(d => `
                 <div class="rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-emerald-800">${d.debut} → ${d.fin}</span>
+                        <span class="font-bold text-emerald-800">${d.heure}</span>
                         ${d.note ? `<span class="text-xs text-emerald-600 italic">${d.note}</span>` : ''}
                     </div>
                 </div>
@@ -296,12 +326,14 @@ document.addEventListener('DOMContentLoaded', function() {
     typeSelect.addEventListener('change', toggleFields);
     coursSelect.addEventListener('change', autoSelectEnseignant);
     personnelSelect.addEventListener('change', function() {
+        filterCoursByEnseignant();
         updateDisponibilites();
         updatePropositions();
     });
     joursSelect.addEventListener('change', updateDisponibilites);
     
     toggleFields();
+    filterCoursByEnseignant();
     updateDisponibilites();
     updatePropositions();
 });

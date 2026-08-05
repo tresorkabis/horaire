@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg {% if h.type_horaire == 'EXAMEN' %}bg-amber-50 text-amber-600{% else %}bg-violet-50 text-violet-600{% endif %}"><i class="fa-solid {% if h.type_horaire == 'EXAMEN' %}fa-pen-to-square{% else %}fa-book{% endif %}"></i></span>
               <div class="min-w-0">
                 <p class="text-sm font-bold text-slate-800">{{ h.cours.titre }}</p>
-                <p class="text-xs text-slate-400">#CH-{{ h.id_chrono|stringformat:'04d' }} · {{ h.cours.duree }} min</p>
+                <p class="text-xs text-slate-400">#CH-{{ h.id_chrono|stringformat:'04d' }} · {{ h.cours.duree_label }}</p>
               </div>
             </div>
           </td>

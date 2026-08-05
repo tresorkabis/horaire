@@ -30,8 +30,7 @@
         <thead class="bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-400">
           <tr>
             <th class="px-6 py-4">Jour</th>
-            <th class="px-6 py-4">Heure début</th>
-            <th class="px-6 py-4">Heure fin</th>
+            <th class="px-6 py-4">Heure</th>
             <th class="px-6 py-4">Note</th>
             <th class="px-6 py-4 text-right">Action</th>
           </tr>
@@ -42,8 +41,7 @@
             <td class="px-6 py-4">
               <span class="rounded-md bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700">{{ d.jour }}</span>
             </td>
-            <td class="px-6 py-4 text-sm font-semibold text-slate-700">{{ d.heure_debut|time:"H:i" }}</td>
-            <td class="px-6 py-4 text-sm font-semibold text-slate-700">{{ d.heure_fin|time:"H:i" }}</td>
+            <td class="px-6 py-4 text-sm font-semibold text-slate-700">{{ d.heure|time:"H:i" }}</td>
             <td class="px-6 py-4 text-xs text-slate-400">{{ d.note|default:"—" }}</td>
             <td class="px-6 py-4 text-right">
               <form method="post" action="{% url 'delete_availability' d.pk %}" class="inline">
@@ -74,8 +72,7 @@
           <thead class="bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-400">
             <tr>
               <th class="px-6 py-4">Jour</th>
-              <th class="px-6 py-4">Heure Début</th>
-              <th class="px-6 py-4">Heure Fin</th>
+              <th class="px-6 py-4">Heure</th>
               <th class="px-6 py-4">Note (Optionnel)</th>
               <th class="px-6 py-4"></th>
             </tr>
@@ -93,10 +90,10 @@
                 </select>
               </td>
               <td class="px-6 py-4">
-                <input type="time" name="debut[]" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500" required>
-              </td>
-              <td class="px-6 py-4">
-                <input type="time" name="fin[]" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500" required>
+                <select name="heure[]" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500" required>
+                  <option value="08:00:00">08:00</option>
+                  <option value="11:40:00">11:40</option>
+                </select>
               </td>
               <td class="px-6 py-4">
                 <input type="text" name="note[]" placeholder="Ex: Sauf imprévu" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500">
@@ -138,18 +135,13 @@
     const newRow = body.rows[0].cloneNode(true);
     rowCounter++;
 
-    // Mettre à jour les noms des champs pour la nouvelle ligne
-    const inputs = newRow.querySelectorAll('input, select');
-    inputs.forEach(input => {
-      if (input.name.endsWith('[]')) {
-        // Garder le nom original pour les champs existants
-        input.name = input.name;
-      }
-      if (input.tagName === 'INPUT' && input.type !== 'time') {
-        input.value = '';
-      }
-      if (input.tagName === 'SELECT') {
-        input.selectedIndex = 0;
+    // Réinitialiser les valeurs des champs de la nouvelle ligne
+    const fields = newRow.querySelectorAll('input, select');
+    fields.forEach(field => {
+      if (field.tagName === 'SELECT') {
+        field.selectedIndex = 0;
+      } else if (field.tagName === 'INPUT' && field.type === 'text') {
+        field.value = '';
       }
     });
 
@@ -167,22 +159,20 @@
     const body = document.getElementById('availability-body');
     const rows = body.rows;
     let isValid = true;
-    let errorMessage = '';
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
-      const startTime = row.querySelector('input[name="debut[]"]').value;
-      const endTime = row.querySelector('input[name="fin[]"]').value;
+      const jour = row.querySelector('select[name="jour[]"]');
+      const heure = row.querySelector('select[name="heure[]"]');
 
-      if (startTime && endTime && startTime >= endTime) {
+      if (!jour.value || !heure.value) {
         isValid = false;
-        errorMessage = 'L\'heure de fin doit être postérieure à l\'heure de début pour tous les créneaux.';
         break;
       }
     }
 
     if (!isValid) {
-      alert(errorMessage);
+      alert('Veuillez remplir tous les champs.');
       return false;
     }
 

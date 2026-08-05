@@ -40,7 +40,7 @@
               </div>
             </div>
           </td>
-          <td class="px-6 py-4 text-sm font-semibold text-slate-700">{{ c.duree }} min</td>
+          <td class="px-6 py-4 text-sm font-semibold text-slate-700">{{ c.duree_label }}</td>
           <td class="px-6 py-4 text-right">
             <a href="{% url 'schedule_list' %}?cours={{ c.id_cours }}" class="inline-flex items-center gap-2 rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 transition hover:bg-brand-100">
               <i class="fa-regular fa-calendar"></i> Voir les créneaux

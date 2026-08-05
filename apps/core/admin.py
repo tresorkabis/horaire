@@ -132,8 +132,8 @@ class CreneauHoraireAdmin(admin.ModelAdmin):
 
 @admin.register(Disponibilite)
 class DisponibiliteAdmin(admin.ModelAdmin):
-    list_display = ("enseignant", "jour", "heure_debut", "heure_fin", "note")
+    list_display = ("enseignant", "jour", "heure", "note")
     list_filter = ("jour", "enseignant")
     search_fields = ("enseignant__nom", "enseignant__post_nom")
     autocomplete_fields = ("enseignant",)
-    ordering = ("enseignant", "jour", "heure_debut")
+    ordering = ("enseignant", "jour", "heure")

@@ -1,4 +1,5 @@
 from django import forms
+from django.db.models import Q
 
 from .models import (
     Cours,
@@ -14,6 +15,7 @@ from .models import (
     Utilisateur_Role,
     TYPE_COURS,
     TYPE_EXAMEN,
+    HEURE_CHOICES,
 )
 
 # ---------------------------------------------------------------------------
@@ -68,6 +70,19 @@ class CreneauHoraireForm(BaseForm):
         # Rendre jours et date conditionnels selon le type
         self.fields["jours"].required = False
         self.fields["date"].required = False
+
+        # Filtrer les cours selon l'enseignant sélectionné (si un enseignant est choisi)
+        personnel_id = self.data.get("personnel") if self.data else None
+        if personnel_id:
+            self.fields["cours"].queryset = Cours.objects.filter(  # type: ignore
+                Q(enseignant_id=personnel_id) |
+                Q(horaires__personnel_id=personnel_id)
+            ).distinct().order_by("titre")
+        else:
+            # Par défaut, montrer tous les cours assignés à un enseignant
+            self.fields["cours"].queryset = Cours.objects.filter(  # type: ignore
+                enseignant__isnull=False
+            ).distinct().order_by("titre")
 
     def clean(self):
         cleaned = super().clean()
@@ -155,10 +170,12 @@ class DisponibiliteForm(forms.ModelForm):
 
     class Meta:
         model = Disponibilite
-        fields = ("jour", "heure_debut", "heure_fin", "note")
+        fields = ("jour", "heure", "note")
         widgets = {
-            "heure_debut": forms.TimeInput(attrs={"type": "time"}),
-            "heure_fin": forms.TimeInput(attrs={"type": "time"}),
+            "heure": forms.Select(
+                choices=HEURE_CHOICES,
+                attrs={"class": "w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-brand-500"},
+            ),
         }
 
     def __init__(self, *args, **kwargs):
@@ -168,15 +185,6 @@ class DisponibiliteForm(forms.ModelForm):
             field.widget.attrs["class"] = (
                 f"{existing} {_BASE_WIDGET_CLASSES}".strip()
             )
-
-    def clean(self):
-        cleaned = super().clean()
-        debut, fin = cleaned.get("heure_debut"), cleaned.get("heure_fin")
-        if debut and fin and debut >= fin:
-            raise forms.ValidationError(
-                "L'heure de fin doit être postérieure à l'heure de début."
-            )
-        return cleaned
 
 
 class FiliereForm(BaseForm):
@@ -194,7 +202,19 @@ class PromotionForm(BaseForm):
 class CoursForm(BaseForm):
     class Meta:
         model = Cours
-        fields = ("titre", "duree", "enseignant")
+        fields = ("titre", "duree", "duree_unite", "enseignant")
+        widgets = {
+            "duree": forms.NumberInput(attrs={"placeholder": "ex: 30"}),
+            "duree_unite": forms.Select(attrs={"class": "w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-500 outline-none"}),
+        }
+        labels = {
+            "duree": "Durée",
+            "duree_unite": "Unité",
+            "enseignant": "Enseignant habilité",
+        }
+        help_texts = {
+            "duree": "Durée du cours (ex: 30 pour 30H)",
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

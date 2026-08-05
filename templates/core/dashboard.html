@@ -6,7 +6,15 @@
   <div>
     <div class="mb-2 inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-700"><i class="fa-solid fa-sparkles"></i>Bienvenue sur Horaires</div>
     <h1 class="font-display text-3xl font-extrabold tracking-tight text-slate-950 md:text-4xl">Bonjour, {{ user.nom|title }}.</h1>
-    <p class="mt-2 text-slate-500">Pilotez la planification académique de l'Université ESFORCA en toute sérénité.</p>
+    {% if is_chef %}
+      <p class="mt-2 text-slate-500">Chef de Filière : <span class="font-bold text-slate-800">{{ filiere_chef.nom_filiere|default:"Non assignée" }}</span></p>
+    {% elif is_etudiant and request.user.etudiant.promotion %}
+      <p class="mt-2 text-slate-500">Étudiant en {{ request.user.etudiant.promotion.filiere.nom_filiere }}</p>
+    {% elif is_etudiant %}
+      <p class="mt-2 text-slate-500">Étudiant (Promotion non assignée)</p>
+    {% else %}
+      <p class="mt-2 text-slate-500">Pilotez la planification académique de l'Université ESFORCA en toute sérénité.</p>
+    {% endif %}
   </div>
   {% if is_chef %}
   <div class="flex gap-3">
@@ -241,7 +249,7 @@
               <span class="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-600"><i class="fa-solid fa-book-open"></i></span>
               <div>
                 <p class="text-sm font-bold text-slate-800">{{ h.cours.titre }}</p>
-                <p class="text-xs text-slate-400">{{ h.cours.duree }} minutes</p>
+                <p class="text-xs text-slate-400">{{ h.cours.duree_label }}</p>
               </div>
             </div>
           </td>
@@ -276,8 +284,7 @@
       <thead class="bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-400">
         <tr>
           <th class="px-6 py-4">Jour</th>
-          <th class="px-6 py-4">Heure début</th>
-          <th class="px-6 py-4">Heure fin</th>
+          <th class="px-6 py-4">Heure</th>
           <th class="px-6 py-4">Note</th>
         </tr>
       </thead>
@@ -287,8 +294,7 @@
           <td class="px-6 py-4">
             <span class="rounded-md bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700">{{ d.jour }}</span>
           </td>
-          <td class="px-6 py-4 text-sm font-semibold text-slate-700">{{ d.heure_debut|time:"H:i" }}</td>
-          <td class="px-6 py-4 text-sm font-semibold text-slate-700">{{ d.heure_fin|time:"H:i" }}</td>
+          <td class="px-6 py-4 text-sm font-semibold text-slate-700">{{ d.heure|time:"H:i" }}</td>
           <td class="px-6 py-4 text-xs text-slate-400">{{ d.note|default:"—" }}</td>
         </tr>
         {% endfor %}
@@ -391,7 +397,7 @@
               <span class="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-600"><i class="fa-solid fa-book-open"></i></span>
               <div>
                 <p class="text-sm font-bold text-slate-800">{{ h.cours.titre }}</p>
-                <p class="text-xs text-slate-400">{{ h.cours.duree }} minutes</p>
+                <p class="text-xs text-slate-400">{{ h.cours.duree_label }}</p>
               </div>
             </div>
           </td>
